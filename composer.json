@@ -1,0 +1,32 @@
+{
+    "name": "roddy/firestore-eloquent",
+    "description": "Firestore Eloquent, an object-relational mapper (ORM) that makes it enjoyable to interact with your database. When using Eloquent, each firestore collection has a corresponding \"Model\"/\"Class\" that is used to interact with that collection. In addition to retrieving records from the firestore collection, Eloquent models/classes allow you to insert, update, and delete records from the collection as well.",
+    "type": "library",
+    "require": {
+        "google/cloud-firestore": "^1.37"
+    },
+    "autoload": {
+        "psr-4": {
+            "Roddy\\FirestoreEloquent\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Alfred Nti",
+            "email": "alfrednti5000@gmail.com"
+        }
+    ],
+    "extra" : {
+        "laravel" : {
+            "providers" : [
+                "Roddy\\FirestoreEloquent\\Providers\\FModelProvider"
+            ],
+            "aliases" : {
+                "FAuth" : "Roddy\\FirestoreEloquent\\Auth\\FAuth"
+            }
+        }
+    }
+}

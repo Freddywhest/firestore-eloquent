@@ -80,3 +80,22 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 - [Google gRpc](https://cloud.google.com/php/grpc)
 - [Google Cloud Firestore Storage](https://cloud.google.com/)
 - [PHP](https://php.net)
+
+## Contributors
+
+### Code Contributors
+
+This project exists thanks to all the people who contribute. [[Contribute](https://github.com/FreddyWhest/firestore-eloquent/graphs/contributors)].
+
+<a href = "https://github.com/FreddyWhest/firestore-eloquent/graphs/contributors">
+  <img src = "https://contrib.rocks/image?repo=FreddyWhest/firestore-eloquent"/>
+</a>
+
+### Financial Contributors
+Become a financial contributor and help us sustain our community.
+
+<h1>
+  <a href="https://www.buymeacoffee.com/alfrednti" target="_blank">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-red.png" alt="Buy Me A Coffee" width="150" />
+  </a>
+</h1>

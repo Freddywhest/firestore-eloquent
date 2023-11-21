@@ -283,7 +283,7 @@ trait PaginateTrait
                 }
             }
 
-            public function livewireLinks($theme = null)
+            /* public function livewireLinks($theme = null)
             {
                 if($this->hasMorePages() || $this->totalPages() > 1){
                     return <<<PAGINATION_HTML
@@ -291,7 +291,7 @@ trait PaginateTrait
                         {$this->generatePaginationLivewire($this->pagination->current_page, $this->pagination->total_pages, 3, $theme, $this->name)}
                     PAGINATION_HTML;
                 }
-            }
+            } */
 
         };
 

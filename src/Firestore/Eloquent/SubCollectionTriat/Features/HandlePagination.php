@@ -1,6 +1,6 @@
 <?php
 
-namespace Roddy\FirestoreEloquent\Firestore\Eloquent\traits\Features;
+namespace Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionTriat\Features;
 
 use Illuminate\Support\Str;
 use Livewire\Attributes\On;

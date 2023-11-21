@@ -56,17 +56,17 @@ You can locate the configuration file in **`config/firebase.php`**.
 
 
 ### Documentation
-Visit [Laravel Firestore Eloquent](https://freddywhest.github.io/laravel-eloquent-docs/) for documentation.
+Visit [Laravel Firestore Eloquent](https://firestore-eloquent.netilify.app/) for documentation.
 
 OR
 
-Use this link [https://freddywhest.github.io/laravel-eloquent-docs/](https://freddywhest.github.io/laravel-eloquent-docs/)
+Use this link [https://firestore-eloquent.netilify.app/](https://firestore-eloquent.netilify.app/)
 
 ### Limitations
-[Limitations](https://freddywhest.github.io/laravel-eloquent-docs/docs/limitations) for documentation.
+[Limitations](https://firestore-eloquent.netilify.app/docs/limitations) for documentation.
 
 ### TODO
-[Todo](https://freddywhest.github.io/laravel-eloquent-docs/docs/todo) for documentation.
+[Todo](https://firestore-eloquent.netilify.app/docs/todo) for documentation.
 
 ### License
 

@@ -43,8 +43,14 @@ class SubDocumentModel
 
     public function firstOrFail()
     {
+        if(!$this->query){
+            $query = $this->fConnection($this->collection)->document($this->documentId)->collection($this->subCollectionName);
+        }else{
+            $query = $this->query;
+        }
+
         return $this->fFirstOrFail(
-            query: $this->query,
+            query: $query,
             collection: $this->collection,
             model: $this->model,
             subCollection: $this->subCollectionName,
@@ -54,8 +60,14 @@ class SubDocumentModel
 
     public function first()
     {
+        if(!$this->query){
+            $query = $this->fConnection($this->collection)->document($this->documentId)->collection($this->subCollectionName);
+        }else{
+            $query = $this->query;
+        }
+
         return $this->fFirst(
-            query: $this->query,
+            query: $query,
             collection: $this->collection,
             model: $this->model,
             subCollectionName: $this->subCollectionName,

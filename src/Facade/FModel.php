@@ -91,7 +91,7 @@ class FModel
                 fieldTypes: (new static)->fieldTypes
             ))->$name(...$arguments);
         } catch (\Throwable $th) {
-            throw new \Exception("Call to undefined method ".static::class."::".$name."() .". 'Reason: ' .$th->getMessage(), 1);
+            throw new \Exception("Call to undefined method ".static::class."::".$name."().". ' Main Error:- ' .$th->getMessage(), 1);
 
         }
     }

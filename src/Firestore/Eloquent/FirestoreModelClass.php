@@ -2,19 +2,19 @@
 
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent;
 
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\AllTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\AndWhereTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\CreateTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\DeleteManyTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\FindTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\FirestoreConnectionTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\FirstOrFailTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\FirstTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\GetTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\OrWhereTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\PaginateTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\UpdateManyTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\WhereTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\AllTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\AndWhereTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\CreateTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\DeleteManyTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FindTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FirestoreConnectionTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FirstOrFailTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FirstTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\GetTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\OrWhereTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\PaginateTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\UpdateManyTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\WhereTrait;
 
 class FirestoreModelClass
 {
@@ -92,7 +92,7 @@ class FirestoreModelClass
      * Retrieve all documents from the Firestore database matching the current query parameters.
      *
      * @return array The list of documents matching the current query parameters.
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\traits\GetTrait::fget()
+     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\GetTrait::fget()
      *
      * @example
      * ```php
@@ -115,7 +115,7 @@ class FirestoreModelClass
      * Retrieve the first document from the Firestore database matching the current query parameters.
      *
      * @return mixed The first document matching the current query parameters.
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\traits\FirstTrait::fFirst()
+     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FirstTrait::fFirst()
      *
      * @example
      * ```php
@@ -124,9 +124,9 @@ class FirestoreModelClass
      */
     public function first()
     {
-
-
         return $this->fFirst(
+            path: $this->path,
+            direction: $this->direction,
             query: $this->query,
             collection: $this->collection,
             model: $this->model
@@ -138,7 +138,7 @@ class FirestoreModelClass
      *
      * @return mixed The first document matching the current query parameters.
      * @throws \Exception If no document is found.
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\traits\FirstOrFailTrait::fFirstOrFail()
+     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FirstOrFailTrait::fFirstOrFail()
      *
      * @example
      * ```php
@@ -147,8 +147,9 @@ class FirestoreModelClass
      */
     public function firstOrFail()
     {
-
         return $this->fFirstOrFail(
+            path: $this->path,
+            direction: $this->direction,
             query: $this->query,
             collection: $this->collection,
             model: $this->model
@@ -159,7 +160,7 @@ class FirestoreModelClass
      * Retrieve all documents from the Firestore database .
      *
      * @return array The list of documents.
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\traits\AllTrait::fAll()
+     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\AllTrait::fAll()
      *
      * @example
      * ```php
@@ -183,7 +184,7 @@ class FirestoreModelClass
      *
      * @param string $documentId The ID of the document to retrieve.
      * @return \Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreDataFormat The document with the given ID.
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\traits\FindTrait::fFind()
+     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FindTrait::fFind()
      *
      * @example
      * ```php
@@ -208,7 +209,7 @@ class FirestoreModelClass
      * @param array $filter The filter to apply to the query.
      * @return  Returns a new instance of the model with the query applied.
      * @throws \Exception
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\traits\WhereTrait::fWhere()
+     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\WhereTrait::fWhere()
      *
      * @example
      * ```php
@@ -313,7 +314,7 @@ class FirestoreModelClass
      *
      * @throws \Exception
      *
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\traits\AndWhereTrait::fAndWhere();
+     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\AndWhereTrait::fAndWhere();
      *
      * @example
      * ```php
@@ -335,7 +336,7 @@ class FirestoreModelClass
      *
      * @throws \Exception
      *
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\traits\OrWhereTrait::fOrWhere();
+     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\OrWhereTrait::fOrWhere();
      *
      * @example
      * ```php
@@ -357,7 +358,7 @@ class FirestoreModelClass
      *
      * @throws \Exception
      *
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\traits\UpdateManyTrait::fUpdateMany()
+     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\UpdateManyTrait::fUpdateMany()
      * @example
      * ```php
      * User::where(['age' => 20])->updateMany(['age' => 25]); // Update all users with age 20
@@ -374,14 +375,15 @@ class FirestoreModelClass
     public  function updateMany(array $data)
     {
 
-        $this->fUpdateMany(data: $data,
-                        query: $this->query,
-                        firestore: $this->fConnection($this->collection),
-                        primaryKey: $this->primaryKey,
-                        fillable: $this->fillable,
-                        required: $this->required,
-                        fieldTypes: $this->fieldTypes
-        );
+        return $this->fUpdateMany(data: $data,
+                    query: $this->query,
+                    primaryKey: $this->primaryKey,
+                    fillable: $this->fillable,
+                    required: $this->required,
+                    fieldTypes: $this->fieldTypes,
+                    model: $this->model,
+                    collection: $this->collection
+                );
     }
 
     /**
@@ -391,7 +393,7 @@ class FirestoreModelClass
      *
      * @throws \Exception
      *
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\traits\DeleteManyTrait::fDeleteMany()
+     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\DeleteManyTrait::fDeleteMany()
      *
      * @example
      * ```php
@@ -406,7 +408,7 @@ class FirestoreModelClass
             $query = $this->query;
         }
 
-        $this->fDeleteMany(query: $query, firestore: $this->fConnection($this->collection));
+        return $this->fDeleteMany(query: $query);
     }
 
     /**
@@ -418,7 +420,7 @@ class FirestoreModelClass
      *
      * @throws \Exception
      *
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\traits\CreateTrait::fCreate()
+     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\CreateTrait::fCreate()
      *
      * @example
      * ```php
@@ -426,11 +428,9 @@ class FirestoreModelClass
      * $newUser->name; // John
      * ```
      */
-    public  function create(array $data, $id = '')
+    public  function create(array $data)
     {
-
-
-        return $this->fCreate(data: $data, id: $id,
+        return $this->fCreate(data: $data,
             firestore: $this->fConnection($this->collection),
             fillable: $this->fillable,
             required: $this->required,
@@ -457,13 +457,15 @@ class FirestoreModelClass
     public  function paginate(int $limit, string $name = 'page'): object
     {
         if(!$this->query){
-            $this->query = $this->fConnection($this->collection);
+            $query = $this->fConnection($this->collection);
+        }else{
+            $query = $this->query;
         }
 
         return (object) $this->fPaginate(
             path: $this->path,
             direction: $this->direction,
-            query: $this->query,
+            query: $query,
             model: $this->model,
             collection: $this->collection,
             name: $name,
@@ -490,10 +492,45 @@ class FirestoreModelClass
     public function limit($number)
     {
         if(!$this->query){
-            $query = $this->fConnection($this->collection);
+            if($this->path){
+                if(!$this->direction){
+                    $query = $this->fConnection($this->collection)->orderBy($this->path)->limit($number);
+                }else{
+                    $query = $this->fConnection($this->collection)->orderBy($this->path, $this->direction)->limit($number);
+                }
+            }else{
+                $query = $this->fConnection($this->collection)->limit($number);
+            }
         }else{
-            $query = $this->query;
+            if($this->path){
+                if(!$this->direction){
+                    $query = $this->query->orderBy($this->path)->limit($number);
+                }else{
+                    $query = $this->query->orderBy($this->path, $this->direction)->limit($number);
+                }
+            }else{
+                $query = $this->query->limit($number);
+            }
         }
-        return $query->limit($number);
+
+        if($number == 1){
+            foreach($query->documents()->rows() as $row){
+                return new FirestoreDataFormat(
+                    row: $row,
+                    collectionName: $this->collection,
+                    model: $this->model
+                );
+            }
+        }else{
+            $result = [];
+            foreach($query->documents()->rows() as $row){
+                array_push($result, new FirestoreDataFormat(
+                    row: $row,
+                    collectionName: $this->collection,
+                    model: $this->model
+                ));
+            }
+            return $result;
+        }
     }
 }

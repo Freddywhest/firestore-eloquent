@@ -2,41 +2,40 @@
 
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent;
 
-use Illuminate\Support\Str;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionTriat\AllTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionTriat\AndWhereTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionTriat\DeleteManyTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionTriat\FirestoreConnectionTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionTriat\FirstOrFailTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionTriat\FirstTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionTriat\GetTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionTriat\OrWhereTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionTriat\PaginateTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionTriat\UpdateManyTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionTriat\WhereTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\AllTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\AndWhereTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\DeleteManyTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\FirstOrFailTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\FirstTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\GetTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\OrWhereTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\WhereTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\CreateTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\PaginateTrait as TraitsPaginateTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\UpdateManyTrait as TraitsUpdateManyTrait;
 
 class SubDocumentModel
 {
     use FirstOrFailTrait;
     use FirstTrait,
         WhereTrait,
-        FirestoreConnectionTrait,
         OrWhereTrait,
         AndWhereTrait,
-        PaginateTrait,
+        TraitsPaginateTrait,
         DeleteManyTrait,
         GetTrait,
+        CreateTrait,
         AllTrait;
-        use UpdateManyTrait;
+        use TraitsUpdateManyTrait;
 
-    private $subCollectionName, $documentId, $model, $collection, $query;
+    private $subCollectionName, $row, $query, $model, $collection;
     private $direction;
     private $path;
 
-    public function __construct($subCollectionName, $documentId, $model, $collection)
+    public function __construct($row, $subCollectionName, $model, $collection)
     {
         $this->subCollectionName = $subCollectionName;
-        $this->documentId = $documentId;
+        $this->row = $row;
         $this->model = $model;
         $this->collection = $collection;
     }
@@ -44,34 +43,34 @@ class SubDocumentModel
     public function firstOrFail()
     {
         if(!$this->query){
-            $query = $this->fConnection($this->collection)->document($this->documentId)->collection($this->subCollectionName);
+            $query = $this->row->reference()->collection($this->subCollectionName);
         }else{
             $query = $this->query;
         }
 
         return $this->fFirstOrFail(
+            path: $this->path,
+            direction: $this->direction,
             query: $query,
-            collection: $this->collection,
             model: $this->model,
-            subCollection: $this->subCollectionName,
-            documentIdForMainCollection: $this->documentId
+            collection: $this->subCollectionName
         );
     }
 
     public function first()
     {
         if(!$this->query){
-            $query = $this->fConnection($this->collection)->document($this->documentId)->collection($this->subCollectionName);
+            $query = $this->row->reference()->collection($this->subCollectionName);
         }else{
             $query = $this->query;
         }
 
         return $this->fFirst(
+            path: $this->path,
+            direction: $this->direction,
             query: $query,
-            collection: $this->collection,
             model: $this->model,
-            subCollectionName: $this->subCollectionName,
-            documentIdForMainCollection: $this->documentId
+            collection: $this->subCollectionName
         );
     }
 
@@ -79,10 +78,9 @@ class SubDocumentModel
     {
         $this->query = $this->fWhere(
             filter: $filter,
-            firestore: $this->fConnection($this->collection),
-            documentId: $this->documentId,
-            collectionName: $this->subCollectionName
+            row: $this->row
         );
+
         return $this;
     }
 
@@ -116,55 +114,57 @@ class SubDocumentModel
 
     public function andWhere(array $filters)
     {
-        $this->query = $this->fAndWhere(filters: $filters,
-            firestore: $this->fConnection($this->collection),
-            documentId: $this->documentId,
-            collectionName: $this->subCollectionName
+        $this->query = $this->fAndWhere(
+            filters: $filters,
+            row: $this->row
         );
         return $this;
     }
 
     public function orWhere(array $filters)
     {
-        $this->query = $this->fOrWhere(filters: $filters,
-            firestore: $this->fConnection($this->collection),
-            documentId: $this->documentId,
-            collectionName: $this->subCollectionName
+        $this->query = $this->fOrWhere(
+            filters: $filters,
+            row: $this->row
         );
+
         return $this;
     }
 
     public function all()
     {
+        $query = $this->row->reference()->collection($this->subCollectionName);
+
         return $this->fAll(
             path: $this->path,
             direction: $this->direction,
             model: $this->model,
-            collection: $this->collection,
-            firestore: $this->fConnection($this->collection),
-            documentId: $this->documentId,
-            collectionName: $this->subCollectionName,
-            subCollectionName: $this->subCollectionName
+            query: $query,
+            collection: $this->subCollectionName
         );
     }
 
     public function get()
     {
+        if(!$this->query){
+            $query = $this->row->reference()->collection($this->subCollectionName);
+        }else{
+            $query = $this->query;
+        }
+
         return $this->fget(
             path: $this->path,
             direction: $this->direction,
-            query: $this->query,
             model: $this->model,
-            collection: $this->collection,
-            documentId: $this->documentId,
-            collectionName: $this->subCollectionName
+            query: $query,
+            collection: $this->subCollectionName
         );
     }
 
     public function paginate(int $limit, string $name = 'page'): object
     {
         if(!$this->query){
-            $query = $this->fConnection($this->collection)->document($this->documentId)->collection($this->subCollectionName)->count();
+            $query = $this->row->reference()->collection($this->subCollectionName);
         }else{
             $query = $this->query;
         }
@@ -174,7 +174,7 @@ class SubDocumentModel
             direction: $this->direction,
             query: $query,
             model: $this->model,
-            collection: $this->collection,
+            collection: $this->subCollectionName,
             name: $name,
             limit: $limit
         );
@@ -183,7 +183,7 @@ class SubDocumentModel
     public function count()
     {
         if(!$this->query){
-            return $this->fConnection($this->collection)->document($this->documentId)->collection($this->subCollectionName)->count();
+            return $this->row->reference()->collection($this->subCollectionName)->count();
         }
 
         return $this->query->count();
@@ -192,199 +192,70 @@ class SubDocumentModel
     public function deleteMany()
     {
         if(!$this->query){
-            $query = $this->fConnection($this->collection)->document($this->documentId)->collection($this->subCollectionName);
+            $query = $this->row->reference()->collection($this->subCollectionName);
         }else{
             $query = $this->query;
         }
 
-        $this->fDeleteMany(query: $query, firestore: $this->fConnection($this->collection)->document($this->documentId)->collection($this->subCollectionName));
+        $this->fDeleteMany(query: $query);
     }
 
-    public  function create(array $data, array $fillable = [], array $required = [], array $default = [], array $fieldTypes = [], $id = '')
+    public  function create(array $data, array $fillable = [], array $required = [], array $default = [], array $fieldTypes = [], $primaryKey = 'id')
     {
-
-        /**
-         * Get the namespace for the related model class.
-         * If the 'firebase.class_namespace' configuration value is not set, the default namespace is 'App\FModels'.
-         *
-         * @return string The namespace for the related model class.
-         */
-        $namespace = config('firebase.class_namespace') ?? 'App\\FModels';
-
-        /**
-         * Explodes the fully qualified class name of the related model into an array.
-         *
-         * @param string $model The fully qualified class name of the related model.
-         * @return array An array containing the exploded parts of the class name.
-         */
-        $modelArrName = explode('\\', $this->model);
-
-        /**
-         * Explodes the last element of the given array by '/' and returns the resulting array.
-         *
-         * @param array $modelArrName The array to be exploded.
-         * @return array The resulting array after exploding the last element of the given array.
-         */
-        $modelArrName2 = explode('/', end($modelArrName));
-
-        /**
-         * Explodes the last element of the given model array name by '::' and returns the resulting array.
-         */
-        $modelArrName3 = explode('::', end($modelArrName2));
-
-        /**
-         * Explodes the last element of the given array by colon and returns the resulting array.
-         *
-         * @param array $modelArrName3 The input array to be processed.
-         * @return array The resulting array after exploding the last element by colon.
-         */
-        $modelArrName4 = explode(':', end($modelArrName3));
-
-
-        /**
-         * Get the last element of the array $modelArrName4 and assign it to $modelName.
-         */
-        $modelName = end($modelArrName4);
-
-        $class = $namespace.'\\'.$modelName;
-
-        return $this->fCreate(data: $data, id: $id,
-            firestore: $this->fConnection($this->collection),
+        return $this->fCreate(
+            data: $data,
+            firestore: $this->row->reference()->collection($this->subCollectionName),
             fillable: $fillable,
             required: $required,
             default: $default,
             model: $this->model,
-            primaryKey: (new $class)->primaryKey,
-            fieldTypes: $fieldTypes,
-            documentId: $this->documentId,
-            subCollectionName: $this->subCollectionName
+            primaryKey: $primaryKey,
+            fieldTypes: $fieldTypes
         );
-    }
-
-    /**
-     * Returns the type of the given value.
-     *
-     * @param mixed $value The value to check the type of.
-     * @return string The type of the given value.
-     */
-    private function checkTypeInCreate($value)
-    {
-        return gettype($value);
-    }
-
-    private function fCreate(array $data, $id, $firestore, $fillable, $required, $default, $model, $primaryKey, $fieldTypes, $documentId, $subCollectionName)
-    {
-        $filteredData = [];
-
-        if(count($fillable) > 0) {
-            if(isset($data[$primaryKey])){
-                unset($data[$primaryKey]);
-            }
-
-            if(count($default) > 0){
-                foreach ($default as $k => $v) {
-                    if(!isset($data[$k]) && in_array($k, $required) && in_array($k, $fillable) && $v){
-                        $data[$k] = $v;
-                    }else if(isset($data[$k]) && in_array($k, $required) && in_array($k, $fillable) && !$v){
-                        $data[$k] = $v;
-                    }
-                }
-            }
-
-            foreach ($data as $key => $value) {
-                if(count($fieldTypes) > 0){
-                    if(isset($fieldTypes[$key])){
-                        if($this->checkTypeInCreate($value) !== $fieldTypes[$key]){
-                            throw new \Exception('"'.$key.'" expect type '.$fieldTypes[$key].' but got '.$this->checkTypeInCreate($value).'.', 1);
-                        }
-                    }
-                }
-                if(in_array($key, $fillable)){
-                    if(in_array($key, $required) && !$value){
-                        return throw new \Exception('"'.$key.'" is required.', 1);
-                    }
-
-                   $filteredData = array_merge($filteredData, [$key => $value]);
-                }
-            }
-
-            if (count($required) > 0) {
-                foreach ($required as $value) {
-                    if(!isset($filteredData[$value])){
-                        return throw new \Exception('"'.$value.'" is required.', 1);
-                    }
-                }
-            }
-
-            $collectionReference = $firestore;
-
-            do {
-                $id = Str::random(20);
-            } while ($collectionReference->document($documentId)->collection($subCollectionName)->document($id)->snapshot()->exists());
-
-            if(count($filteredData) > 0){
-                $collectionReference->document($documentId)->collection($subCollectionName)->document($id)->set([...$filteredData, $primaryKey => $id]);
-
-                $data = $collectionReference->document($documentId)->collection($subCollectionName)->document($id);
-
-                return new class($data)
-                {
-                    private $data;
-                    private $dataArr = [];
-
-                    public function __construct($data)
-                    {
-                        $this->dataArr = $data->snapshot()->data();
-                        $this->data = $data;
-                    }
-
-                    public function __get($name)
-                    {
-                        if(isset($this->dataArr[$name])){
-                            return $this->dataArr[$name];
-                        }else{
-                            return null;
-                        }
-                    }
-
-                    public function delete()
-                    {
-                        $this->data->delete();
-                    }
-
-                    public function exists()
-                    {
-                        return $this->data->snapshot()->exists();
-                    }
-                };
-            }
-
-            return new class($data)
-            {
-                public function __get($name)
-                {
-                    return null;
-                }
-
-                public function exists()
-                {
-                    return false;
-                }
-            };
-        }else{
-            return throw new \Exception('Cannot create a new "'.$model.'" because fillable property in "'.$model.'" model is empty or undefined.', 1);
-
-        }
     }
 
     public function limit($number)
     {
         if(!$this->query){
-            $query = $this->fConnection($this->collection)->document($this->documentId)->collection($this->subCollectionName);
+            if($this->path){
+                if(!$this->direction){
+                    $query = $this->row->reference()->collection($this->subCollectionName)->orderBy($this->path)->limit($number);
+                }else{
+                    $query = $this->row->reference()->collection($this->subCollectionName)->orderBy($this->path, $this->direction)->limit($number);
+                }
+            }else{
+                $query = $this->row->reference()->collection($this->subCollectionName)->limit($number);
+            }
         }else{
-            $query = $this->query;
+            if($this->path){
+                if(!$this->direction){
+                    $query = $this->query->orderBy($this->path)->limit($number);
+                }else{
+                    $query = $this->query->orderBy($this->path, $this->direction)->limit($number);
+                }
+            }else{
+                $query = $this->query->limit($number);
+            }
         }
 
-        return $query->limit($number);
+        if($number == 1){
+            foreach($query->documents()->rows() as $row){
+                return new FirestoreDataFormat(
+                    row: $row,
+                    collectionName: $this->subCollectionName,
+                    model: $this->model
+                );
+            }
+        }else{
+            $result = [];
+            foreach($query->documents()->rows() as $row){
+                array_push($result, new FirestoreDataFormat(
+                    row: $row,
+                    collectionName: $this->subCollectionName,
+                    model: $this->model
+                ));
+            }
+            return $result;
+        }
     }
 }

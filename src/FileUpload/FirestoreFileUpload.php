@@ -69,7 +69,6 @@ class FirestoreFileUpload
         }
 
         if(file_exists($file->getRealPath())){
-
             $storage = new StorageClient([
                 'keyFilePath' => base_path().'/'.env('GOOGLE_APPLICATION_CREDENTIALS'),
             ]);

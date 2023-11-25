@@ -5,9 +5,8 @@
  */
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent;
 
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\FirestoreConnectionTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\PaginateTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\UpdateTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\PaginateTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\UpdateTrait;
 use Roddy\FirestoreEloquent\Firestore\Relations\FHasMany;
 use Roddy\FirestoreEloquent\Firestore\Relations\FHasOne;
 
@@ -17,11 +16,13 @@ class FirestoreDataFormat
     use FHasMany;
     use UpdateTrait;
     use PaginateTrait;
-    use FirestoreConnectionTrait;
+
+    private $data;
+    private ?string $documentId;
+    private bool $exists;
+
     public function __construct(
-        private array $data,
-        private ?string $documentId,
-        private bool $exists,
+        private object $row,
         private $collectionName,
         private $model
     )
@@ -40,6 +41,10 @@ class FirestoreDataFormat
         if(!config('firebase.projects.app.project_id', env('FIREBASE_PROJECT_ID'))){
             throw new \Exception("FIREBASE_PROJECT_ID not set in .env file.");
         }
+
+        $this->data = $row->data();
+        $this->documentId = $row->id();
+        $this->exists = count($this->data) > 0 ? true : false;
     }
 
     /**
@@ -64,8 +69,8 @@ class FirestoreDataFormat
      */
     public function __get($name)
     {
-        if(count($this->data) < 1){
-            return [];
+        if(count($this->data) < 1){ // If the document does not exist.
+            return null;
         }
 
         if (array_key_exists($name, $this->data)) {
@@ -124,6 +129,18 @@ class FirestoreDataFormat
     public function exists()
     {
         return $this->exists;
+    }
+
+    public function updateSubDocument(array $data, array $fillable = [], array $required = [], array $fieldTypes = [], $primaryKey = 'id')
+    {
+        return $this->fupdate(
+            data: $data,
+            row: $this->row,
+            primaryKey: $primaryKey,
+            fillable: $fillable,
+            required: $required,
+            fieldTypes: $fieldTypes,
+        );
     }
 
     /**
@@ -185,10 +202,9 @@ class FirestoreDataFormat
 
         $class = $namespace.'\\'.$modelName;
 
-        $this->fupdate(
+        return $this->fupdate(
             data: $data,
-            firestore: $this->fConnection($this->collectionName),
-            documentId: $this->documentId,
+            row: $this->row,
             primaryKey: (new $class)->primaryKey,
             fillable: (new $class)->fillable,
             required: (new $class)->required,
@@ -209,7 +225,11 @@ class FirestoreDataFormat
      */
     public function delete()
     {
-        $this->fConnection($this->collectionName)->document($this->documentId)->delete();
+        try {
+            return $this->row->reference()->delete();
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
     }
 
     /**
@@ -252,15 +272,11 @@ class FirestoreDataFormat
 
     public function collection($subCollectionName)
     {
-        $documentId = $this->documentId;
-        $model = $this->model;
-        $collection = $this->collectionName;
-
         return new SubDocumentModel(
+            row: $this->row,
             subCollectionName: $subCollectionName,
-            documentId: $documentId,
-            model: $model,
-            collection: $collection
+            model: $this->model,
+            collection: $this->collectionName
         );
     }
 }

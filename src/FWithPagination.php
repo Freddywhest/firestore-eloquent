@@ -1,7 +1,7 @@
 <?php
 namespace Roddy\FirestoreEloquent;
 
-use Roddy\FirestoreEloquent\Firestore\Eloquent\traits\Features\HandlePagination;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\HandlePagination;
 
 trait FWithPagination
 {

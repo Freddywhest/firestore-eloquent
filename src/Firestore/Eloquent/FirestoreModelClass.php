@@ -47,6 +47,9 @@ class FirestoreModelClass
      private  $direction;
      private  $path;
      private $model;
+     private $field;
+     private $value;
+     private $order;
      protected $primaryKey = 'id';
      protected $fillable = [];
      protected $required = [];
@@ -107,7 +110,10 @@ class FirestoreModelClass
             direction: $this->direction,
             query: $this->query,
             model: $this->model,
-            collection: $this->collection
+            collection: $this->collection,
+            field: $this->field,
+            value: $this->value,
+            order: $this->order
         );
     }
 
@@ -129,7 +135,10 @@ class FirestoreModelClass
             direction: $this->direction,
             query: $this->query,
             collection: $this->collection,
-            model: $this->model
+            model: $this->model,
+            field: $this->field,
+            value: $this->value,
+            order: $this->order
         );
     }
 
@@ -454,7 +463,7 @@ class FirestoreModelClass
      * ```
      */
 
-    public  function paginate(int $limit, string $name = 'page'): object
+    public  function paginate(int $limit, string $name = 'page', int $page = null): object
     {
         if(!$this->query){
             $query = $this->fConnection($this->collection);
@@ -469,7 +478,11 @@ class FirestoreModelClass
             model: $this->model,
             collection: $this->collection,
             name: $name,
-            limit: $limit
+            limit: $limit,
+            field: $this->field,
+            value: $this->value,
+            order: $this->order,
+            page: $page
         );
     }
 
@@ -533,4 +546,20 @@ class FirestoreModelClass
             return $result;
         }
     }
+
+    public function like(string $field, int|string $value, string $order = 'asc')
+    {
+        $this->value = $value;
+        $this->field = $field;
+        $this->order = $order;
+
+        return $this;
+    }
 }
+
+/* , $field, $value, $order
+
+    field: $this->field,
+    value: $this->value,
+    order: $this->order
+*/

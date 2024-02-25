@@ -19,27 +19,44 @@ trait FirstTrait
      *
      * @return mixed Returns a FirestoreDataFormat object if a result is found, otherwise returns an empty array.
      */
-    public function fFirst($path, $direction, $query, $collection, $model)
+    public function fFirst($path, $direction, $query, $collection, $model, $field, $value, $order)
     {
         if($query){
-            if($path){
-                if(!$direction){
-                    $newQuery = $query->orderBy($path)->limit(1);
-                }else{
-                    $newQuery = $query->orderBy($path, $direction)->limit(1);
-                }
+            if($field && $value){
+                $newQuery = $query
+                        ->orderBy($field, $order)
+                        ->startAt([$value])
+                        ->endAt([$value."\uf8ff"])
+                        ->limit(1);
             }else{
-                $newQuery = $query->limit(1);
+                if($path){
+                    if(!$direction){
+                        $newQuery = $query->orderBy($path)->limit(1);
+                    }else{
+                        $newQuery = $query->orderBy($path, $direction)->limit(1);
+                    }
+                }else{
+                    $newQuery = $query->limit(1);
+                }
+
             }
         }else{
-            if($path){
-                if(!$direction){
-                    $newQuery = $this->fConnection($this->collection)->orderBy($path)->limit(1);
-                }else{
-                    $newQuery = $this->fConnection($this->collection)->orderBy($path, $direction)->limit(1);
-                }
+            if($field && $value){
+                $newQuery = $this->fConnection($this->collection)
+                        ->orderBy($field, $order)
+                        ->startAt([$value])
+                        ->endAt([$value."\uf8ff"])
+                        ->limit(1);
             }else{
-                $newQuery = $this->fConnection($this->collection)->limit(1);
+                if($path){
+                    if(!$direction){
+                        $newQuery = $this->fConnection($this->collection)->orderBy($path)->limit(1);
+                    }else{
+                        $newQuery = $this->fConnection($this->collection)->orderBy($path, $direction)->limit(1);
+                    }
+                }else{
+                    $newQuery = $this->fConnection($this->collection)->limit(1);
+                }
             }
         }
 

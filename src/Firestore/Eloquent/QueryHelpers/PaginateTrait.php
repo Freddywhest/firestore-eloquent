@@ -2,6 +2,7 @@
 
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers;
 
+use Google\Cloud\Firestore\Filter;
 use Illuminate\Support\Facades\Request;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreDataFormat;
 use Roddy\FirestoreEloquent\Firestore\Url\GetLivewireUrl as Url;
@@ -21,16 +22,23 @@ trait PaginateTrait
      * @throws \Exception If an error occurs during the pagination process.
      * @return array The paginated documents.
      */
-    protected function fPaginate($path, $direction, $query, $model, $collection, $name, $limit): object
+    protected function fPaginate($path, $direction, $query, $model, $collection, $name, $limit, $field, $value, $order, $page): object
     {
-        if($path){
-            if(!$direction){
-                $data = $query->orderBy($path, 'DESC');
-            }else{
-                $data = $query->orderBy($path, $direction);
-            }
+        if($field && $value){
+            $data = $query
+                    ->orderBy($field, $order)
+                    ->startAt([$value])
+                    ->endAt([$value.'~']);
         }else{
-            $data = $query;
+            if($path){
+                if(!$direction){
+                    $data = $query->orderBy($path, 'DESC');
+                }else{
+                    $data = $query->orderBy($path, $direction);
+                }
+            }else{
+                $data = $query;
+            }
         }
 
         $this->name = $name;
@@ -56,13 +64,16 @@ trait PaginateTrait
 
         $newQueries = array_merge($queries_array);
 
-
-        if(Request::has($name)){
-            $currentPage = (int) Request::input($name);
-        }elseif(isset($newQueries[$name]) && $newQueries[$name] > 0 && $newQueries[$name] <= $totalPages){
-            $currentPage = (int) $newQueries[$name];
+        if($page !== null && is_numeric($page) && $page > 0){
+            $currentPage = $page;
         }else{
-            $currentPage = 1;
+            if(Request::has($name)){
+                $currentPage = (int) Request::input($name);
+            }elseif(isset($newQueries[$name]) && $newQueries[$name] > 0 && $newQueries[$name] <= $totalPages){
+                $currentPage = (int) $newQueries[$name];
+            }else{
+                $currentPage = 1;
+            }
         }
 
         $offset = ($currentPage - 1) * $limit;

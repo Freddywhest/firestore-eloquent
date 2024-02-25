@@ -19,18 +19,27 @@ trait GetTrait
      *
      * @return array An array of FirestoreDataFormat objects or an empty array if no data is found.
      */
-    public function fget($path, $direction, $query, $model, $collection)
+    public function fget($path, $direction, $query, $model, $collection, $field, $value, $order)
     {
         $result =[];
-
-        if($path){
-            if(!$direction){
-                $rows = $query->orderBy($path)->documents()->rows();
-            }else{
-                $rows = $query->orderBy($path, $direction)->documents()->rows();
-            }
+        if($field && $value){
+            $rows = $query
+                    ->orderBy($field, $order)
+                    ->startAt([$value])
+                    ->endAt([$value."\uf8ff"])
+                    ->documents()
+                    ->rows();
         }else{
-            $rows = $query->documents()->rows();
+            if($path){
+                if(!$direction){
+                    $rows = $query->orderBy($path)->documents()->rows();
+                }else{
+                    $rows = $query->orderBy($path, $direction)->documents()->rows();
+                }
+            }else{
+                $rows = $query->documents()->rows();
+            }
+
         }
 
         if($query->count() > 0){

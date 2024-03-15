@@ -4,6 +4,7 @@ namespace Roddy\FirestoreEloquent\Providers;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Roddy\FirestoreEloquent\Console\Commands\MakeModel;
+use Roddy\FirestoreEloquent\Firestore\Url\SetLivewireUrl;
 use Roddy\FirestoreEloquent\FJavaScript;
 use Roddy\FirestoreEloquent\FStyle;
 
@@ -16,26 +17,18 @@ class FModelProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot(\Illuminate\Routing\Router  $router)
+    public function boot(\Illuminate\Routing\Router  $router, \App\Http\Kernel $kernel)
     {
         /**
-         * FILEPATH: /vendor/roddy/firestore-eloquent/src/Providers/FModelProvider.php
-         *
-         * Registers middleware aliases for F_Authentication and F_RedirectIfAuthenticated.
-         * Publishes the firebase.php config file to the application's config directory.
-         * Registers the MakeModel command.
-         * Defines a Blade directive for checking if the user is authenticated with fauth().
-         */
-        $router->middlewareGroup('web', [
-            \Illuminate\Session\Middleware\StartSession::class,
-            \App\Http\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            // \Illuminate\Session\Middleware\AuthenticateSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            // \App\Http\Middleware\VerifyCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \Roddy\FirestoreEloquent\Firestore\Url\SetLivewireUrl::class,
-        ]);
+         * Set Livewire Url
+        */
+
+        $kernel->appendMiddlewareToGroup('web', \Illuminate\Session\Middleware\StartSession::class);
+        $kernel->appendMiddlewareToGroup('web', \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class);
+        $kernel->appendMiddlewareToGroup('web', \Illuminate\View\Middleware\ShareErrorsFromSession::class);
+        $kernel->appendMiddlewareToGroup('web', \App\Http\Middleware\EncryptCookies::class);
+        $kernel->appendMiddlewareToGroup('web', \Illuminate\Routing\Middleware\SubstituteBindings::class);
+        $kernel->appendMiddlewareToGroup('web', SetLivewireUrl::class);
 
         app('router')->aliasMiddleware('f.auth', \Roddy\FirestoreEloquent\Middleware\F_Authentication::class);
         app('router')->aliasMiddleware('f.guest', \Roddy\FirestoreEloquent\Middleware\F_RedirectIfAuthenticated::class);

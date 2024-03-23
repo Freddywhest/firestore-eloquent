@@ -281,6 +281,45 @@ trait PaginateTrait
                 }
             }
 
+            public function laravelLinks()
+            {
+                
+                $maxLinks = $this->pagination->per_page;
+                $links = [];
+                $totalPages = $this->pagination->total_pages;
+                $currentPage = $this->pagination->current_page;
+                $startPage = max(1, $currentPage - intval($maxLinks / 2));
+                $endPage = min($totalPages, $startPage + $maxLinks - 1);
+            
+                // Adjust the start page if we're close to the end
+                $startPage = max(1, min($startPage, $totalPages - $maxLinks + 1));
+            
+                // Previous Page Link
+                $links[] = [
+                    'url' => $currentPage > 1 ? $this->previousPageUrl() : null,
+                    'label' => '&laquo; Previous',
+                    'active' => false
+                ];
+            
+                // Generate Page Number Links
+                for ($page = $startPage; $page <= $endPage; $page++) {
+                    $links[] = [
+                        'url' => $this->url($page),
+                        'label' => (string) $page,
+                        'active' => $page == $currentPage
+                    ];
+                }
+            
+                // Next Page Link
+                $links[] = [
+                    'url' => $currentPage < $totalPages ? $this->nextPageUrl() : null,
+                    'label' => 'Next &raquo;',
+                    'active' => false
+                ];
+            
+                return $links;
+            }
+
             /* public function livewireLinks($theme = null)
             {
                 if($this->hasMorePages() || $this->totalPages() > 1){

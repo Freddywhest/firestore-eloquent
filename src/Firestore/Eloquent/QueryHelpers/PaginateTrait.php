@@ -281,7 +281,7 @@ trait PaginateTrait
                 }
             }
 
-            public function laravelLinks()
+            public function inertiaLinks()
             {
                 
                 $maxLinks = $this->pagination->per_page;

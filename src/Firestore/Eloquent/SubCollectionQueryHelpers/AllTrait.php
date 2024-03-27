@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Trait AllTrait
  *
@@ -8,40 +9,37 @@
  *
  * @package Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers
  */
+
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers;
 
 use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreDataFormat;
-
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ToArrayHelper;
 
 trait AllTrait
 {
+    /**
+     * Get all documents from Firestore for a specific collection reference in ascending or descending order
+     * if order param present.
+     *
+     * @param string $path Sorting path for documents
+     * @param string $direction Sorting direction
+     * @param string $model Model class name for Firestore data.
+     * @param string $collection Collection or table for Firestore data.
+     * @return Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\IToArrayHelper
+     */
     protected function fAll($path, $direction, $model, $collection, $query)
     {
 
-        $result = [];
-
-        if($path){
-            if(!$direction){
-                $rows = $query->orderBy($path, 'DESC')->documents()->rows();
-            }else{
-                $rows = $query->orderBy($path, $direction)->documents()->rows();
+        if ($path) {
+            if (!$direction) {
+                $queryRaw = $query->orderBy($path, 'DESC')->documents()->rows();
+            } else {
+                $queryRaw = $query->orderBy($path, $direction)->documents()->rows();
             }
-
-        }else{
-            $rows = $query->documents()->rows();
+        } else {
+            $queryRaw = $query->documents()->rows();
         }
 
-        foreach($rows as $row){
-            array_push(
-                $result,
-                new FirestoreDataFormat(
-                    row: $row,
-                    collectionName: $collection,
-                    model: $model
-                )
-            );
-        }
-
-        return $result;
+        return new ToArrayHelper(queryRaw: $queryRaw, model: $model, collection: $collection);
     }
 }

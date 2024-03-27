@@ -1,12 +1,16 @@
 <?php
+
 /**
  * This trait provides the functionality to find a document in Firestore collection.
  * It includes methods to check the type of a given value, filter the data to be stored in the document,
  * and validate required and fillable attributes of the model.
  * @package Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers
-*/
+ */
+
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers;
+
 use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreDataFormat;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ToArrayHelper;
 
 trait FirstOrFailTrait
 {
@@ -21,46 +25,35 @@ trait FirstOrFailTrait
      * @param array $fillable The fillable attributes of the model.
      * @param array $required The required attributes of the model.
      * @param array $fieldTypes The field types of the model.
-     * @return mixed The found document or an empty array if not found.
+     * @return Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\IToArrayHelper
      *
      * @throws \Exception If a required attribute is missing or if an attribute has an invalid type.
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the document is not found.
-    */
+     */
     public function fFirstOrFail($query, $collection, $model, $path, $direction)
     {
-        if($query){
-            if($path){
-                if(!$direction){
+        if ($query) {
+            if ($path) {
+                if (!$direction) {
                     $newQuery = $query->orderBy($path)->limit(1);
-                }else{
+                } else {
                     $newQuery = $query->orderBy($path, $direction)->limit(1);
                 }
-            }else{
+            } else {
                 $newQuery = $query->limit(1);
             }
-        }else{
-            if($path){
-                if(!$direction){
+        } else {
+            if ($path) {
+                if (!$direction) {
                     $newQuery = $this->fConnection($this->collection)->orderBy($path)->limit(1);
-                }else{
+                } else {
                     $newQuery = $this->fConnection($this->collection)->orderBy($path, $direction)->limit(1);
                 }
-            }else{
+            } else {
                 $newQuery = $this->fConnection($this->collection)->limit(1);
             }
         }
 
-        if ($newQuery->count() > 0) {
-            $row = $newQuery->documents()->rows()[0];
-
-            return new FirestoreDataFormat(
-                row: $row,
-                collectionName: $collection,
-                model: $model
-            );
-
-        }
-
-        return abort(404);
+        return new ToArrayHelper(queryRaw: $newQuery, model: $model, collection: $collection, single: "firstOrFail");
     }
 }

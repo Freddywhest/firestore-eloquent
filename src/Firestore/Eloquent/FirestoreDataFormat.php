@@ -1,8 +1,10 @@
 <?php
+
 /**
  * Class FirestoreDataFormat
  * @package Firestore\Eloquent
  */
+
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent;
 
 use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\PaginateTrait;
@@ -25,8 +27,7 @@ class FirestoreDataFormat
         private object $row,
         private $collectionName,
         private $model
-    )
-    {
+    ) {
         /**
          * Constructor for FirestoreDataFormat class.
          *
@@ -38,7 +39,7 @@ class FirestoreDataFormat
          * @param mixed $model The model to be used.
          * @throws \Exception if FIREBASE_PROJECT_ID is not set in .env file.
          */
-        if(!config('firebase.projects.app.project_id', env('FIREBASE_PROJECT_ID'))){
+        if (!config('firebase.projects.app.project_id', env('FIREBASE_PROJECT_ID'))) {
             throw new \Exception("FIREBASE_PROJECT_ID not set in .env file.");
         }
 
@@ -69,7 +70,7 @@ class FirestoreDataFormat
      */
     public function __get($name)
     {
-        if(count($this->data) < 1){ // If the document does not exist.
+        if (count($this->data) < 1) { // If the document does not exist.
             return null;
         }
 
@@ -85,7 +86,6 @@ class FirestoreDataFormat
             E_USER_NOTICE); */
         return null;
     }
-
     /**
      * Returns the data as an object.
      *
@@ -93,7 +93,7 @@ class FirestoreDataFormat
      */
     public function data()
     {
-        if(count($this->data) == 0){
+        if (count($this->data) == 0) {
             return null;
         }
 
@@ -200,7 +200,7 @@ class FirestoreDataFormat
          */
         $modelName = end($modelArrName4);
 
-        $class = $namespace.'\\'.$modelName;
+        $class = $namespace . '\\' . $modelName;
 
         return $this->fupdate(
             data: $data,
@@ -278,5 +278,10 @@ class FirestoreDataFormat
             model: $this->model,
             collection: $this->collectionName
         );
+    }
+
+    public function toArray()
+    {
+        return $this->data;
     }
 }

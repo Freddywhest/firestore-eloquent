@@ -11,6 +11,7 @@ use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\GetTrai
 use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\OrWhereTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\WhereTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\CreateTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ToArrayHelper;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\PaginateTrait as TraitsPaginateTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\UpdateManyTrait as TraitsUpdateManyTrait;
 
@@ -26,7 +27,7 @@ class SubDocumentModel
         GetTrait,
         CreateTrait,
         AllTrait;
-        use TraitsUpdateManyTrait;
+    use TraitsUpdateManyTrait;
 
     private $subCollectionName, $row, $query, $model, $collection;
     private $direction;
@@ -42,9 +43,9 @@ class SubDocumentModel
 
     public function firstOrFail()
     {
-        if(!$this->query){
+        if (!$this->query) {
             $query = $this->row->reference()->collection($this->subCollectionName);
-        }else{
+        } else {
             $query = $this->query;
         }
 
@@ -59,9 +60,9 @@ class SubDocumentModel
 
     public function first()
     {
-        if(!$this->query){
+        if (!$this->query) {
             $query = $this->row->reference()->collection($this->subCollectionName);
-        }else{
+        } else {
             $query = $this->query;
         }
 
@@ -86,7 +87,7 @@ class SubDocumentModel
 
     public function orderBy(string $path, ?string $direction = null)
     {
-        if($direction && !in_array(strtoupper($direction), ['DESC', 'ASC'])){
+        if ($direction && !in_array(strtoupper($direction), ['DESC', 'ASC'])) {
             throw new \Exception('OrderBy direction should be either "DESC" or "ASC"', 1);
         }
 
@@ -146,9 +147,9 @@ class SubDocumentModel
 
     public function get()
     {
-        if(!$this->query){
+        if (!$this->query) {
             $query = $this->row->reference()->collection($this->subCollectionName);
-        }else{
+        } else {
             $query = $this->query;
         }
 
@@ -161,11 +162,11 @@ class SubDocumentModel
         );
     }
 
-    public function paginate(int $limit, string $name = 'page'): object
+    public function paginate(int $limit, string $name = 'page', ?int $page = null): object
     {
-        if(!$this->query){
+        if (!$this->query) {
             $query = $this->row->reference()->collection($this->subCollectionName);
-        }else{
+        } else {
             $query = $this->query;
         }
 
@@ -176,13 +177,17 @@ class SubDocumentModel
             model: $this->model,
             collection: $this->subCollectionName,
             name: $name,
-            limit: $limit
+            limit: $limit,
+            page: $page,
+            order: $this->order ? $this->order : 'ASC',
+            field: $this->field,
+            value: $this->value
         );
     }
 
     public function count()
     {
-        if(!$this->query){
+        if (!$this->query) {
             return $this->row->reference()->collection($this->subCollectionName)->count();
         }
 
@@ -191,9 +196,9 @@ class SubDocumentModel
 
     public function deleteMany()
     {
-        if(!$this->query){
+        if (!$this->query) {
             $query = $this->row->reference()->collection($this->subCollectionName);
-        }else{
+        } else {
             $query = $this->query;
         }
 
@@ -216,46 +221,43 @@ class SubDocumentModel
 
     public function limit($number)
     {
-        if(!$this->query){
-            if($this->path){
-                if(!$this->direction){
+        if (!$this->query) {
+            if ($this->path) {
+                if (!$this->direction) {
                     $query = $this->row->reference()->collection($this->subCollectionName)->orderBy($this->path)->limit($number);
-                }else{
+                } else {
                     $query = $this->row->reference()->collection($this->subCollectionName)->orderBy($this->path, $this->direction)->limit($number);
                 }
-            }else{
+            } else {
                 $query = $this->row->reference()->collection($this->subCollectionName)->limit($number);
             }
-        }else{
-            if($this->path){
-                if(!$this->direction){
+        } else {
+            if ($this->path) {
+                if (!$this->direction) {
                     $query = $this->query->orderBy($this->path)->limit($number);
-                }else{
+                } else {
                     $query = $this->query->orderBy($this->path, $this->direction)->limit($number);
                 }
-            }else{
+            } else {
                 $query = $this->query->limit($number);
             }
         }
-
-        if($number == 1){
-            foreach($query->documents()->rows() as $row){
-                return new FirestoreDataFormat(
-                    row: $row,
-                    collectionName: $this->subCollectionName,
-                    model: $this->model
-                );
-            }
-        }else{
-            $result = [];
-            foreach($query->documents()->rows() as $row){
-                array_push($result, new FirestoreDataFormat(
-                    row: $row,
-                    collectionName: $this->subCollectionName,
-                    model: $this->model
-                ));
-            }
-            return $result;
+        if ($number == 1) {
+            return new ToArrayHelper(queryRaw: $query, model: $this->model, collection: $this->collection, single: "first");
+        } else {
+            return new ToArrayHelper(queryRaw: $query, model: $this->model, collection: $this->collection);
         }
     }
+    public function like(string $field, int|string $value, string $order = 'asc')
+    {
+        $this->value = $value;
+        $this->field = $field;
+        $this->order = $order;
+
+        return $this;
+    }
+
+    private $field;
+    private $value;
+    private $order;
 }

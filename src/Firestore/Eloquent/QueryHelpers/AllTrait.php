@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Trait AllTrait
  *
@@ -8,9 +9,11 @@
  *
  * @package Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers
  */
+
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers;
 
 use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreDataFormat;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ToArrayHelper;
 
 trait AllTrait
 {
@@ -22,11 +25,11 @@ trait AllTrait
      * @param string $direction Sorting direction
      * @param string $model Model class name for Firestore data.
      * @param string $collection Collection or table for Firestore data.
-     * @return array FirestoreDataFormat[] Array where each item is a FirestoreDataFormat object.
+     * @return Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\IToArrayHelper
      */
     protected function fAll($path, $direction, $model, $collection, $firestore)
     {
-        /*
+        /**
          * Implemention details:
          * - obtains all documents from a collection referred to by $firestore
          * - optionally sorts them based on $path and $direction
@@ -34,30 +37,16 @@ trait AllTrait
          * - Returns an array of them
          */
 
-        $result = [];
-
-        if($path){
-            if(!$direction){
-                $rows = $firestore->orderBy($path, 'DESC')->documents()->rows();
-            }else{
-                $rows = $firestore->orderBy($path, $direction)->documents()->rows();
+        if ($path) {
+            if (!$direction) {
+                $queryRaw = $firestore->orderBy($path, 'DESC')->documents()->rows();
+            } else {
+                $queryRaw = $firestore->orderBy($path, $direction)->documents()->rows();
             }
-
-        }else{
-            $rows = $firestore->documents()->rows();
+        } else {
+            $queryRaw = $firestore->documents()->rows();
         }
 
-        foreach($rows as $row){
-            array_push(
-                $result,
-                new FirestoreDataFormat(
-                    row: $row,
-                    collectionName: $collection,
-                    model: $model
-                )
-            );
-        }
-
-        return $result;
+        return new ToArrayHelper(queryRaw: $queryRaw, model: $model, collection: $collection);
     }
 }

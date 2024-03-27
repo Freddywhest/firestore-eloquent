@@ -1,10 +1,14 @@
 <?php
+
 /**
  * This trait provides the functionality to retrieve Firestore data based on the given parameters.
  * @package Roddy\FirestoreEloquent
-*/
+ */
+
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers;
+
 use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreDataFormat;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ToArrayHelper;
 
 trait GetTrait
 {
@@ -17,45 +21,27 @@ trait GetTrait
      * @param string $model The name of the model class.
      * @param string $collection The name of the Firestore collection.
      *
-     * @return array An array of FirestoreDataFormat objects or an empty array if no data is found.
+     * @return Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\IToArrayHelper The get() method returns an instance of this trait.
      */
     public function fget($path, $direction, $query, $model, $collection, $field, $value, $order)
     {
-        $result =[];
-        if($field && $value){
-            $rows = $query
-                    ->orderBy($field, $order)
-                    ->startAt([$value])
-                    ->endAt([$value."\uf8ff"])
-                    ->documents()
-                    ->rows();
-        }else{
-            if($path){
-                if(!$direction){
-                    $rows = $query->orderBy($path)->documents()->rows();
-                }else{
-                    $rows = $query->orderBy($path, $direction)->documents()->rows();
+        if ($this->field && $this->value) {
+            $queryRaw = $this->query
+                ->orderBy($this->field, $this->order)
+                ->startAt([$this->value])
+                ->endAt([$this->value . "\uf8ff"]);
+        } else {
+            if ($this->path) {
+                if (!$this->direction) {
+                    $queryRaw = $this->query->orderBy($this->path);
+                } else {
+                    $queryRaw = $this->query->orderBy($this->path, $this->direction);
                 }
-            }else{
-                $rows = $query->documents()->rows();
+            } else {
+                $queryRaw = $this->query;
             }
-
         }
 
-        if($query->count() > 0){
-            foreach($rows as $row){
-
-                array_push($result, new FirestoreDataFormat(
-                    row: $row,
-                    collectionName: $collection,
-                    model: $model
-                ));
-            }
-
-            return $result;
-        }
-
-        return [];
-
+        return new ToArrayHelper(queryRaw: $queryRaw, model: $model, collection: $collection);
     }
 }

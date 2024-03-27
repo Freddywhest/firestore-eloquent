@@ -6,6 +6,7 @@ use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\AllTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\AndWhereTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\CreateTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\DeleteManyTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ToArrayHelper;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FindTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FirestoreConnectionTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FirstOrFailTrait;
@@ -19,16 +20,16 @@ use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\WhereTrait;
 class FirestoreModelClass
 {
     use FirestoreConnectionTrait,
-    GetTrait,
-    FirstTrait,
-    FirstOrFailTrait,
-    DeleteManyTrait,
-    OrWhereTrait,
-    AndWhereTrait,
-    WhereTrait,
-    FindTrait,
-    PaginateTrait,
-    AllTrait;
+        GetTrait,
+        FirstTrait,
+        FirstOrFailTrait,
+        DeleteManyTrait,
+        OrWhereTrait,
+        AndWhereTrait,
+        WhereTrait,
+        FindTrait,
+        PaginateTrait,
+        AllTrait;
     use CreateTrait, UpdateManyTrait;
 
     /**
@@ -41,20 +42,20 @@ class FirestoreModelClass
      * @property array $fieldTypes
      */
 
-     protected $collection;
-     private  $filter;
-     private  $query;
-     private  $direction;
-     private  $path;
-     private $model;
-     private $field;
-     private $value;
-     private $order;
-     protected $primaryKey = 'id';
-     protected $fillable = [];
-     protected $required = [];
-     protected $default = [];
-     protected $fieldTypes = [];
+    protected $collection;
+    private  $filter;
+    private  $query;
+    private  $direction;
+    private  $path;
+    private $model;
+    private $field;
+    private $value;
+    private $order;
+    protected $primaryKey = 'id';
+    protected $fillable = [];
+    protected $required = [];
+    protected $default = [];
+    protected $fieldTypes = [];
 
     public function service()
     {
@@ -69,13 +70,12 @@ class FirestoreModelClass
         $default,
         $fieldTypes,
         $model,
-    )
-    {
+    ) {
         /**
          * Check if FIREBASE_PROJECT_ID is set in .env file or config file.
          * If not set, throw an exception.
          */
-        if(!config('firebase.projects.app.project_id', env('FIREBASE_PROJECT_ID'))){
+        if (!config('firebase.projects.app.project_id', env('FIREBASE_PROJECT_ID'))) {
             throw new \Exception("FIREBASE_PROJECT_ID not set in .env file.");
         }
 
@@ -93,14 +93,11 @@ class FirestoreModelClass
 
     /**
      * Retrieve all documents from the Firestore database matching the current query parameters.
+     * @return \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\IToArrayHelper An instance of the IGetTrait interface.
+     * @trait \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\GetTrait::fget()
      *
-     * @return array The list of documents matching the current query parameters.
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\GetTrait::fget()
-     *
-     * @example
-     * ```php
+     * @example```php
      * $users = User::where(['age' => 20])->get(); // Retrieve all users with age 20
-     * ```
      */
     public function get()
     {
@@ -120,13 +117,11 @@ class FirestoreModelClass
     /**
      * Retrieve the first document from the Firestore database matching the current query parameters.
      *
-     * @return mixed The first document matching the current query parameters.
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FirstTrait::fFirst()
+     * @return Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\IToArrayHelper
+     * @trait \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FirstTrait::fFirst()
      *
-     * @example
-     * ```php
+     * @example```php
      * $user = User::where(['age' => 20])->first(); // Retrieve the first user with age 20
-     * ```
      */
     public function first()
     {
@@ -145,14 +140,12 @@ class FirestoreModelClass
     /**
      * Retrieve the first document from the Firestore database matching the current query parameters or throw an exception if no document is found.
      *
-     * @return mixed The first document matching the current query parameters.
+     * @return Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\IToArrayHelper
      * @throws \Exception If no document is found.
      * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FirstOrFailTrait::fFirstOrFail()
      *
-     * @example
-     * ```php
+     * @example```php
      * $user = User::where(['age' => 20])->firstOrFail(); // Retrieve the first user with age 20 or throw an exception if no user is found
-     * ```
      */
     public function firstOrFail()
     {
@@ -171,10 +164,8 @@ class FirestoreModelClass
      * @return array The list of documents.
      * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\AllTrait::fAll()
      *
-     * @example
-     * ```php
+     * @example```php
      * $users = User::all(); // Retrieve all users
-     * ```
      */
     public  function all()
     {
@@ -192,14 +183,11 @@ class FirestoreModelClass
      * Retrieve a document from the Firestore database by its document ID.
      *
      * @param string $documentId The ID of the document to retrieve.
-     * @return \Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreDataFormat The document with the given ID.
-     * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\FindTrait::fFind()
+     * @return Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\IToArrayHelper
      *
-     * @example
-     * ```php
+     * @example```php
      * $documentId = '1234567890'; // The ID of the document to retrieve
      * $user = User::find($documentId); // Retrieve the document with the given ID
-     * ```
      */
     public  function find(string $documentId)
     {
@@ -220,17 +208,15 @@ class FirestoreModelClass
      * @throws \Exception
      * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\WhereTrait::fWhere()
      *
-     * @example
-     * ```php
+     * @example ```php
      * $users = User::where(['age' => 20])->get(); // Get all users with age 20
-     * ```
+     *
      */
     public  function where(array $filter)
     {
 
         $this->query = $this->fWhere(filter: $filter, firestore: $this->fConnection($this->collection));
         return $this;
-
     }
 
     /**
@@ -241,23 +227,20 @@ class FirestoreModelClass
      * @return
      * @throws \Exception If the direction is not "DESC" or "ASC".
      *
-     * @example
-     * ```php
+     * @example ```php
      * $users = User::where(["age" => 25])->orderBy('id', 'DESC')->get(); // Get all users with age 25 ordered by id descending
-     * ```
-     * @example
-     * ```php
+     *
+     * @example ```php
      * $users = User::where(["age" => 25])->orderBy('id')->get(); // Get all users with age 25 ordered by id ascending
-     * ```
-     * @example
-     * ```php
+     *
+     * @example ```php
      * $users = User::orderBy('id')->all(); // Get all users ordered by id ascending
-     * ```
+     *
      */
-    public  function orderBy(string $path, ?string $direction = null)
+    public function orderBy(string $path, ?string $direction = null)
     {
 
-        if($direction && !in_array(strtoupper($direction), ['DESC', 'ASC'])){
+        if ($direction && !in_array(strtoupper($direction), ['DESC', 'ASC'])) {
             throw new \Exception('OrderBy direction should be either "DESC" or "ASC"', 1);
         }
 
@@ -273,14 +256,12 @@ class FirestoreModelClass
      * @param string $path The field path to order by.
      * @return
      *
-     * @example
-     * ```php
+     * @example```php
      * $users = User::orderByDesc('id')->all(); // Get all users ordered by id descending
-     * ```
-     * @example
-     * ```php
+     *
+     * @example```php
      * $users = User::where(["age" => 25])->orderByDesc('id')->get(); // Get all users with age 25 ordered by id descending
-     * ```
+     *
      */
     public  function orderByDesc(string $path)
     {
@@ -297,14 +278,12 @@ class FirestoreModelClass
      * @param string $path The field path to order by.
      * @return
      *
-     * @example
-     * ```php
+     * @example ```php
      * $users = User::orderByAsc('id')->all(); // Get all users ordered by id ascending
-     * ```
-     * @example
-     * ```php
+     *
+     * @example```php
      * $users = User::where(["age" => 25])->orderByAsc('id')->get(); // Get all users with age 25 ordered by id ascending
-     * ```
+     *
      */
     public  function orderByAsc(string $path)
     {
@@ -325,10 +304,7 @@ class FirestoreModelClass
      *
      * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\AndWhereTrait::fAndWhere();
      *
-     * @example
-     * ```php
-     * $users = User::andWhere([['name', '==', 'John'], ['age' => 25]])->get(); // Get all users with name John and age 25
-     * ```
+     * @example    * $users = User::andWhere([['name', '==', 'John'], ['age' => 25]])->get(); // Get all users with name John and age 25
      */
     public  function andWhere(array $filters)
     {
@@ -347,10 +323,8 @@ class FirestoreModelClass
      *
      * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\OrWhereTrait::fOrWhere();
      *
-     * @example
-     * ```php
+     * @example```php
      * $users = User::orWhere([['name', '==', 'John'], ['age' => 25]])->get(); // Get all users with name John or age 25
-     * ```
      */
     public  function orWhere(array $filters)
     {
@@ -368,31 +342,26 @@ class FirestoreModelClass
      * @throws \Exception
      *
      * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\UpdateManyTrait::fUpdateMany()
-     * @example
-     * ```php
+     * @example```php
      * User::where(['age' => 20])->updateMany(['age' => 25]); // Update all users with age 20
-     * ```
-     * @example
-     * ```php
+     * @example```php
      * User::where(['age' => 20])->updateMany(['age' => 25, 'name' => 'John']); // Update all users with age 20
-     * ```
-     * @example
-     * ```php
+     * @example```php
      * User::where(['age' => 20])->updateMany(['age' => 25, 'name' => 'John', 'dob' => '1990-01-01']); // Update all users with age 20
-     * ```
      */
     public  function updateMany(array $data)
     {
 
-        return $this->fUpdateMany(data: $data,
-                    query: $this->query,
-                    primaryKey: $this->primaryKey,
-                    fillable: $this->fillable,
-                    required: $this->required,
-                    fieldTypes: $this->fieldTypes,
-                    model: $this->model,
-                    collection: $this->collection
-                );
+        return $this->fUpdateMany(
+            data: $data,
+            query: $this->query,
+            primaryKey: $this->primaryKey,
+            fillable: $this->fillable,
+            required: $this->required,
+            fieldTypes: $this->fieldTypes,
+            model: $this->model,
+            collection: $this->collection
+        );
     }
 
     /**
@@ -404,16 +373,14 @@ class FirestoreModelClass
      *
      * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\DeleteManyTrait::fDeleteMany()
      *
-     * @example
-     * ```php
+     * @example```php
      * User::where(['age' => 20])->deleteMany(); // Delete all users with age 20
-     * ```
      */
     public  function deleteMany()
     {
-        if(!$this->query){
+        if (!$this->query) {
             $query = $this->fConnection($this->collection);
-        }else{
+        } else {
             $query = $this->query;
         }
 
@@ -431,15 +398,14 @@ class FirestoreModelClass
      *
      * @see \Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\CreateTrait::fCreate()
      *
-     * @example
-     * ```php
+     * @example```php
      * $newUser = User::create(['name' => 'John', 'age' => 20]); // Create a new user
      * $newUser->name; // John
-     * ```
      */
     public  function create(array $data)
     {
-        return $this->fCreate(data: $data,
+        return $this->fCreate(
+            data: $data,
             firestore: $this->fConnection($this->collection),
             fillable: $this->fillable,
             required: $this->required,
@@ -456,18 +422,16 @@ class FirestoreModelClass
      * @param string $name The name of the page query parameter
      * @return object
      *
-     * @example
-     * ```php
+     * @example```php
      * $data = User::paginate(10); // Paginate all users with 10 items per page
      * $user = $data->data();
-     * ```
      */
 
     public  function paginate(int $limit, string $name = 'page', int $page = null): object
     {
-        if(!$this->query){
+        if (!$this->query) {
             $query = $this->fConnection($this->collection);
-        }else{
+        } else {
             $query = $this->query;
         }
 
@@ -494,9 +458,9 @@ class FirestoreModelClass
      */
     public function count()
     {
-        if(!$this->query){
+        if (!$this->query) {
             $query = $this->fConnection($this->collection);
-        }else{
+        } else {
             $query = $this->query;
         }
         return $query->count();
@@ -504,46 +468,32 @@ class FirestoreModelClass
 
     public function limit($number)
     {
-        if(!$this->query){
-            if($this->path){
-                if(!$this->direction){
+        if (!$this->query) {
+            if ($this->path) {
+                if (!$this->direction) {
                     $query = $this->fConnection($this->collection)->orderBy($this->path)->limit($number);
-                }else{
+                } else {
                     $query = $this->fConnection($this->collection)->orderBy($this->path, $this->direction)->limit($number);
                 }
-            }else{
+            } else {
                 $query = $this->fConnection($this->collection)->limit($number);
             }
-        }else{
-            if($this->path){
-                if(!$this->direction){
+        } else {
+            if ($this->path) {
+                if (!$this->direction) {
                     $query = $this->query->orderBy($this->path)->limit($number);
-                }else{
+                } else {
                     $query = $this->query->orderBy($this->path, $this->direction)->limit($number);
                 }
-            }else{
+            } else {
                 $query = $this->query->limit($number);
             }
         }
 
-        if($number == 1){
-            foreach($query->documents()->rows() as $row){
-                return new FirestoreDataFormat(
-                    row: $row,
-                    collectionName: $this->collection,
-                    model: $this->model
-                );
-            }
-        }else{
-            $result = [];
-            foreach($query->documents()->rows() as $row){
-                array_push($result, new FirestoreDataFormat(
-                    row: $row,
-                    collectionName: $this->collection,
-                    model: $this->model
-                ));
-            }
-            return $result;
+        if ($number == 1) {
+            return new ToArrayHelper(queryRaw: $query, model: $this->model, collection: $this->collection, single: "first");
+        } else {
+            return new ToArrayHelper(queryRaw: $query, model: $this->model, collection: $this->collection);
         }
     }
 

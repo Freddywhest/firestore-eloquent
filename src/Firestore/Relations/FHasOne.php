@@ -1,10 +1,12 @@
 <?php
+
 /**
  * This trait provides the functionality to create a new document in Firestore collection.
  * It includes methods to check the type of a given value, filter the data to be stored in the document,
  * and validate required and fillable attributes of the model.
  * @package Roddy\FirestoreEloquent
-*/
+ */
+
 namespace Roddy\FirestoreEloquent\Firestore\Relations;
 
 trait FHasOne
@@ -17,7 +19,7 @@ trait FHasOne
          * @param string|null $localKey The local key to set.
          * @param string $foreignKey The foreign key to use.
          */
-        if(!$localKey){
+        if (!$localKey) {
             $localKey = $foreignKey;
         }
 
@@ -78,26 +80,27 @@ trait FHasOne
          *
          * @return mixed|null The first record matching the foreign key or null if the model does not exist.
          */
-        if(gettype($model) === 'string'){
-            $class = $namespace.'\\'.$modelName;
+        if (gettype($model) === 'string') {
+            $class = $namespace . '\\' . $modelName;
 
-            if(!class_exists($class)){
+            if (!class_exists($class)) {
                 $trace = debug_backtrace();
                 trigger_error(
-                    "Model '".$model."' does not exists.".
-                    ' in ' . $trace[0]['file'] .
-                    ' on line ' . $trace[0]['line'],
-                    E_USER_NOTICE);
+                    "Model '" . $model . "' does not exists." .
+                        ' in ' . $trace[0]['file'] .
+                        ' on line ' . $trace[0]['line'],
+                    E_USER_NOTICE
+                );
                 return null;
-            }else{
-                if(isset($data[$localKey])){
+            } else {
+                if (isset($data[$localKey])) {
                     $localModelId = $data[$localKey];
-                }else{
+                } else {
                     return [];
                 }
 
                 $localModelId = $data[$localKey];
-                $result = $class::where([$foreignKey, '=', $localModelId])->first();
+                $result = $class::where([$foreignKey, '=', $localModelId])->first()->data();
                 return $result;
             }
         }

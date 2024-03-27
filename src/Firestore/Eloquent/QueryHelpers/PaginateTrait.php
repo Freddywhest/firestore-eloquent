@@ -24,19 +24,19 @@ trait PaginateTrait
      */
     protected function fPaginate($path, $direction, $query, $model, $collection, $name, $limit, $field, $value, $order, $page): object
     {
-        if($field && $value){
+        if ($field && $value) {
             $data = $query
-                    ->orderBy($field, $order)
-                    ->startAt([$value])
-                    ->endAt([$value.'~']);
-        }else{
-            if($path){
-                if(!$direction){
+                ->orderBy($field, $order)
+                ->startAt([$value])
+                ->endAt([$value . '~']);
+        } else {
+            if ($path) {
+                if (!$direction) {
                     $data = $query->orderBy($path, 'DESC');
-                }else{
+                } else {
                     $data = $query->orderBy($path, $direction);
                 }
-            }else{
+            } else {
                 $data = $query;
             }
         }
@@ -44,19 +44,18 @@ trait PaginateTrait
         $this->name = $name;
 
         $totalData = $data->count();
-        $totalPages = (int) ceil($totalData/$limit);
+        $totalPages = (int) ceil($totalData / $limit);
 
         $url = Url::current();
-        $url_decomposition = parse_url ($url);
-        $queries = array_key_exists('query',(array) $url_decomposition)?$url_decomposition['query']:false;
-        $queries_array = array ();
+        $url_decomposition = parse_url($url);
+        $queries = array_key_exists('query', (array) $url_decomposition) ? $url_decomposition['query'] : false;
+        $queries_array = array();
         if ($queries) {
             $cut_queries   = explode('&', $queries);
             foreach ($cut_queries as $k => $v) {
-                if ($v)
-                {
+                if ($v) {
                     $tmp = explode('=', $v);
-                    if (sizeof($tmp ) < 2) $tmp[1] = true;
+                    if (sizeof($tmp) < 2) $tmp[1] = true;
                     $queries_array[$tmp[0]] = urldecode($tmp[1]);
                 }
             }
@@ -64,14 +63,14 @@ trait PaginateTrait
 
         $newQueries = array_merge($queries_array);
 
-        if($page !== null && is_numeric($page) && $page > 0){
+        if ($page !== null && is_numeric($page) && $page > 0) {
             $currentPage = $page;
-        }else{
-            if(Request::has($name)){
+        } else {
+            if (Request::has($name)) {
                 $currentPage = (int) Request::input($name);
-            }elseif(isset($newQueries[$name]) && $newQueries[$name] > 0 && $newQueries[$name] <= $totalPages){
+            } elseif (isset($newQueries[$name]) && $newQueries[$name] > 0 && $newQueries[$name] <= $totalPages) {
                 $currentPage = (int) $newQueries[$name];
-            }else{
+            } else {
                 $currentPage = 1;
             }
         }
@@ -94,8 +93,8 @@ trait PaginateTrait
             "total" => $totalData,
         ];
 
-        if($paginatedData->count() > 0){
-            foreach($paginatedData->documents()->rows() as $row){
+        if ($paginatedData->count() > 0) {
+            foreach ($paginatedData->documents()->rows() as $row) {
 
                 array_push($result, new FirestoreDataFormat(
                     row: $row,
@@ -105,7 +104,8 @@ trait PaginateTrait
             }
         }
 
-        return new class($pagination, $result, $name) {
+        return new class($pagination, $result, $name)
+        {
             private $pagination;
             private $data;
             private $name;
@@ -126,10 +126,11 @@ trait PaginateTrait
 
                 $trace = debug_backtrace();
                 trigger_error(
-                    'Attempt to read undefined property "'.$name.'"'.
-                    ' in ' . $trace[0]['file'] .
-                    ' on line ' . $trace[0]['line'],
-                    E_USER_NOTICE);
+                    'Attempt to read undefined property "' . $name . '"' .
+                        ' in ' . $trace[0]['file'] .
+                        ' on line ' . $trace[0]['line'],
+                    E_USER_NOTICE
+                );
                 return null;
             }
 
@@ -180,26 +181,25 @@ trait PaginateTrait
 
             public function nextPageUrl()
             {
-                if($this->pagination->next_page){
+                if ($this->pagination->next_page) {
                     $url = Url::current();
-                    $url_decomposition = parse_url ($url);
+                    $url_decomposition = parse_url($url);
                     $array = array($this->name => $this->pagination->next_page);
                     $cut_url = explode('?', $url);
-                    $queries = array_key_exists('query',(array) $url_decomposition)?$url_decomposition['query']:false;
-                    $queries_array = array ();
+                    $queries = array_key_exists('query', (array) $url_decomposition) ? $url_decomposition['query'] : false;
+                    $queries_array = array();
                     if ($queries) {
                         $cut_queries   = explode('&', $queries);
                         foreach ($cut_queries as $k => $v) {
-                            if ($v)
-                            {
+                            if ($v) {
                                 $tmp = explode('=', $v);
-                                if (sizeof($tmp ) < 2) $tmp[1] = true;
+                                if (sizeof($tmp) < 2) $tmp[1] = true;
                                 $queries_array[$tmp[0]] = urldecode($tmp[1]);
                             }
                         }
                     }
-                    $newQueries = array_merge($queries_array,$array);
-                    return $cut_url[0].'?'.http_build_query($newQueries);
+                    $newQueries = array_merge($queries_array, $array);
+                    return $cut_url[0] . '?' . http_build_query($newQueries);
                 }
 
                 return null;
@@ -207,26 +207,25 @@ trait PaginateTrait
 
             public function previousPageUrl()
             {
-                if($this->pagination->prev_page){
+                if ($this->pagination->prev_page) {
                     $url = Url::current();
-                    $url_decomposition = parse_url ($url);
+                    $url_decomposition = parse_url($url);
                     $array = array($this->name => $this->pagination->prev_page);
                     $cut_url = explode('?', $url);
-                    $queries = array_key_exists('query',(array) $url_decomposition)?$url_decomposition['query']:false;
-                    $queries_array = array ();
+                    $queries = array_key_exists('query', (array) $url_decomposition) ? $url_decomposition['query'] : false;
+                    $queries_array = array();
                     if ($queries) {
                         $cut_queries   = explode('&', $queries);
                         foreach ($cut_queries as $k => $v) {
-                            if ($v)
-                            {
+                            if ($v) {
                                 $tmp = explode('=', $v);
-                                if (sizeof($tmp ) < 2) $tmp[1] = true;
+                                if (sizeof($tmp) < 2) $tmp[1] = true;
                                 $queries_array[$tmp[0]] = urldecode($tmp[1]);
                             }
                         }
                     }
-                    $newQueries = array_merge($queries_array,$array);
-                    return $cut_url[0].'?'.http_build_query($newQueries);
+                    $newQueries = array_merge($queries_array, $array);
+                    return $cut_url[0] . '?' . http_build_query($newQueries);
                 }
 
                 return null;
@@ -240,25 +239,24 @@ trait PaginateTrait
             public function url($page)
             {
                 $url = Url::current();
-                $url_decomposition = parse_url ($url);
+                $url_decomposition = parse_url($url);
                 $array = array($this->name => $page);
                 $cut_url = explode('?', $url);
-                $queries = array_key_exists('query',(array) $url_decomposition)?$url_decomposition['query']:false;
-                $queries_array = array ();
+                $queries = array_key_exists('query', (array) $url_decomposition) ? $url_decomposition['query'] : false;
+                $queries_array = array();
                 if ($queries) {
                     $cut_queries   = explode('&', $queries);
                     foreach ($cut_queries as $k => $v) {
-                        if ($v)
-                        {
+                        if ($v) {
                             $tmp = explode('=', $v);
-                            if (sizeof($tmp ) < 2) $tmp[1] = true;
+                            if (sizeof($tmp) < 2) $tmp[1] = true;
                             $queries_array[$tmp[0]] = urldecode($tmp[1]);
                         }
                     }
                 }
 
                 $newQueries = array_merge($queries_array, $array);
-                return $cut_url[0].'?'.http_build_query(array_filter($newQueries));
+                return $cut_url[0] . '?' . http_build_query(array_filter($newQueries));
             }
 
             public function total()
@@ -271,54 +269,63 @@ trait PaginateTrait
                 return $this->name;
             }
 
-            public function links($theme = null)
+            private function htmlLinks($theme = null)
             {
-                if($this->hasMorePages() || $this->totalPages() > 1){
+                if ($this->hasMorePages() || $this->totalPages() > 1) {
                     return <<<PAGINATION_HTML
                         {$this->styles($theme)}
-                        {$this->generatePagination($this->pagination->current_page, $this->pagination->total_pages, 3, $theme, $this->name)}
+                        {$this->generatePagination($this->pagination->current_page,$this->pagination->total_pages, 3,$theme,$this->name)}
                     PAGINATION_HTML;
                 }
             }
 
-            public function inertiaLinks()
+            private function arrayLinks()
             {
-                
-                $maxLinks = $this->pagination->per_page;
                 $links = [];
                 $totalPages = $this->pagination->total_pages;
                 $currentPage = $this->pagination->current_page;
-                $startPage = max(1, $currentPage - intval($maxLinks / 2));
-                $endPage = min($totalPages, $startPage + $maxLinks - 1);
-            
-                // Adjust the start page if we're close to the end
-                $startPage = max(1, min($startPage, $totalPages - $maxLinks + 1));
-            
-                // Previous Page Link
-                $links[] = [
-                    'url' => $currentPage > 1 ? $this->previousPageUrl() : null,
-                    'label' => '&laquo; Previous',
-                    'active' => false
-                ];
-            
+
                 // Generate Page Number Links
-                for ($page = $startPage; $page <= $endPage; $page++) {
+                for ($index = 1; $index <= $totalPages; $index++) {
                     $links[] = [
-                        'url' => $this->url($page),
-                        'label' => (string) $page,
-                        'active' => $page == $currentPage
+                        'url' => $this->url($index),
+                        'label' => (string) $index,
+                        'active' => $index == $currentPage
                     ];
                 }
-            
-                // Next Page Link
-                $links[] = [
-                    'url' => $currentPage < $totalPages ? $this->nextPageUrl() : null,
-                    'label' => 'Next &raquo;',
-                    'active' => false
+
+                return [
+                    'links' => $links,
+                    'prev' => $this->previousPageUrl(),
+                    'next' => $this->nextPageUrl(),
+                    'total_pages' => $this->totalPages(),
+                    'per_page' => $this->pagination->per_page,
+                    'current_page' => $this->pagination->current_page,
+                    'last_page' => $this->pagination->last_page,
+                    'total_data' => $this->total()
                 ];
-            
-                return $links;
             }
+
+            public function links($type = 'html', $theme = null)
+            {
+                if ($type === 'array') {
+                    return $this->arrayLinks();
+                } else {
+                    return $this->htmlLinks($theme);
+                }
+            }
+            public function toArray()
+            {
+                if (count($this->data()) > 0) {
+                    return collect($this->data())->map(function ($item) {
+                        return $item->data();
+                    })->all();
+                }
+
+                return $this->data();
+            }
+
+
 
             /* public function livewireLinks($theme = null)
             {
@@ -329,8 +336,6 @@ trait PaginateTrait
                     PAGINATION_HTML;
                 }
             } */
-
         };
-
     }
 }

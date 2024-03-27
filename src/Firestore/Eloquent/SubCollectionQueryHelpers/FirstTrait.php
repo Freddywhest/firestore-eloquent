@@ -1,38 +1,37 @@
 <?php
+
 /**
  * This trait provides the functionality to retrieve the first result of a Firestore query and format it into a SubCollectionDataFormat object.
  * @package Roddy\FirestoreEloquent
-*/
+ */
+
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers;
 
-use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreDataFormat;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ItemNotFoundHelper;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ToArrayHelper;
 
 trait FirstTrait
 {
+    /**
+     * Retrieve the first result of a Firestore query and format it into a FirestoreDataFormat object.
+     *
+     * @param object $query The Firestore query object.
+     * @param string $collection The name of the Firestore collection.
+     * @param string $model The name of the Eloquent model.
+     *
+     * @return Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\IToArrayHelper
+     */
     public function fFirst($path, $direction, $query, $collection, $model)
     {
-        if($path){
-            if(!$direction){
+        if ($path) {
+            if (!$direction) {
                 $newQuery = $query->orderBy($path)->limit(1);
-            }else{
+            } else {
                 $newQuery = $query->orderBy($path, $direction)->limit(1);
             }
-        }else{
+        } else {
             $newQuery = $query->limit(1);
         }
 
-        if ($newQuery->count() > 0) {
-            $row = $newQuery->documents()->rows()[0];
-
-            return new FirestoreDataFormat(
-                row: $row,
-                collectionName: $collection,
-                model: $model
-            );
-
-        }
-
-        return new ItemNotFoundHelper();
+        return new ToArrayHelper(queryRaw: $newQuery, model: $model, collection: $collection, single: "first");
     }
 }

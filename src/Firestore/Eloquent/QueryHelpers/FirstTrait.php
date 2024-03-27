@@ -1,12 +1,13 @@
 <?php
+
 /**
  * This trait provides the functionality to retrieve the first result of a Firestore query and format it into a FirestoreDataFormat object.
  * @package Roddy\FirestoreEloquent
-*/
+ */
+
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers;
 
-use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreDataFormat;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ItemNotFoundHelper;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ToArrayHelper;
 
 trait FirstTrait
 {
@@ -17,60 +18,49 @@ trait FirstTrait
      * @param string $collection The name of the Firestore collection.
      * @param string $model The name of the Eloquent model.
      *
-     * @return mixed Returns a FirestoreDataFormat object if a result is found, otherwise returns an empty array.
+     * @return Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\IToArrayHelper
      */
     public function fFirst($path, $direction, $query, $collection, $model, $field, $value, $order)
     {
-        if($query){
-            if($field && $value){
+        if ($query) {
+            if ($field && $value) {
                 $newQuery = $query
-                        ->orderBy($field, $order)
-                        ->startAt([$value])
-                        ->endAt([$value."\uf8ff"])
-                        ->limit(1);
-            }else{
-                if($path){
-                    if(!$direction){
+                    ->orderBy($field, $order)
+                    ->startAt([$value])
+                    ->endAt([$value . "\uf8ff"])
+                    ->limit(1);
+            } else {
+                if ($path) {
+                    if (!$direction) {
                         $newQuery = $query->orderBy($path)->limit(1);
-                    }else{
+                    } else {
                         $newQuery = $query->orderBy($path, $direction)->limit(1);
                     }
-                }else{
+                } else {
                     $newQuery = $query->limit(1);
                 }
-
             }
-        }else{
-            if($field && $value){
+        } else {
+            if ($field && $value) {
                 $newQuery = $this->fConnection($this->collection)
-                        ->orderBy($field, $order)
-                        ->startAt([$value])
-                        ->endAt([$value."\uf8ff"])
-                        ->limit(1);
-            }else{
-                if($path){
-                    if(!$direction){
+                    ->orderBy($field, $order)
+                    ->startAt([$value])
+                    ->endAt([$value . "\uf8ff"])
+                    ->limit(1);
+            } else {
+                if ($path) {
+                    if (!$direction) {
                         $newQuery = $this->fConnection($this->collection)->orderBy($path)->limit(1);
-                    }else{
+                    } else {
                         $newQuery = $this->fConnection($this->collection)->orderBy($path, $direction)->limit(1);
                     }
-                }else{
+                } else {
                     $newQuery = $this->fConnection($this->collection)->limit(1);
                 }
             }
         }
 
-        if ($newQuery->count() > 0) {
-            $row = $newQuery->documents()->rows()[0];
 
-            return new FirestoreDataFormat(
-                row: $row,
-                collectionName: $collection,
-                model: $model
-            );
-
-        }
-
-        return new ItemNotFoundHelper();
+        return new ToArrayHelper(queryRaw: $newQuery, model: $model, collection: $collection, single: "first");
     }
 }

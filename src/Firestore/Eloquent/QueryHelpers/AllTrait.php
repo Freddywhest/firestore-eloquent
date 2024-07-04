@@ -39,12 +39,12 @@ trait AllTrait
 
         if ($path) {
             if (!$direction) {
-                $queryRaw = $firestore->orderBy($path, 'DESC')->documents()->rows();
+                $queryRaw = $firestore->orderBy($path, 'DESC');
             } else {
-                $queryRaw = $firestore->orderBy($path, $direction)->documents()->rows();
+                $queryRaw = $firestore->orderBy($path, $direction);
             }
         } else {
-            $queryRaw = $firestore->documents()->rows();
+            $queryRaw = $firestore;
         }
 
         return new ToArrayHelper(queryRaw: $queryRaw, model: $model, collection: $collection);

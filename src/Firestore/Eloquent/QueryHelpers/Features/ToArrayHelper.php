@@ -35,6 +35,9 @@ class ToArrayHelper
     {
         $result = [];
         $queryData = $this->queryData();
+        if (!$queryData) {
+            return $result;
+        }
         if ($this->single == "find") {
             if ($queryData->exists()) {
                 return new FirestoreDataFormat(

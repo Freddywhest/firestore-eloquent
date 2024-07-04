@@ -73,7 +73,7 @@ class FAuth
         if (!Hash::check($password, $user->password)) {
             return false;
         }
-        Session::put('authUserId', $user->id);
+        Session::put('authUserId', $user->{(new $className)->primaryKey});
         return true;
     }
 

@@ -39,15 +39,16 @@ class FAuth
     {
         $className = config('firebase.auth_model') ?? 'App\FModels\User';
 
-        if(!class_exists($className)){
+        if (!class_exists($className)) {
 
             $class = explode('\\', $className);
 
             return trigger_error(
-                'Model "'.end($class). '" does not exists. '.
-                'Run artisan command: "php artisan make:fmodel '.end($class).'" to create "'. end($class). '" model. You can check the documentation for help.',
-                E_USER_NOTICE);
-        }else{
+                'Model "' . end($class) . '" does not exists. ' .
+                    'Run artisan command: "php artisan make:fmodel ' . end($class) . '" to create "' . end($class) . '" model. You can check the documentation for help.',
+                E_USER_NOTICE
+            );
+        } else {
             self::$className = $className;
         }
     }
@@ -63,18 +64,17 @@ class FAuth
         $className = self::$className;
 
         ["email" => $email, "password" => $password] = $args;
-        $user = $className::where(['email', '=', $email])->first();
+        $user = $className::where(['email', '=', $email])->first()->data();
 
-        if(!$user->exists()){
+        if (!$user->exists()) {
             return false;
         }
 
-        if(!Hash::check($password, $user->password)){
+        if (!Hash::check($password, $user->password)) {
             return false;
         }
         Session::put('authUserId', $user->id);
         return true;
-
     }
 
     /**
@@ -86,10 +86,10 @@ class FAuth
         new self();
         $className = self::$className;
 
-        if(request()->session()->get("authUserId")){
-            $user = $className::where([(new $className)->primaryKey, '=', request()->session()->get("authUserId")])->first();
+        if (request()->session()->get("authUserId")) {
+            $user = $className::where([(new $className)->primaryKey, '=', request()->session()->get("authUserId")])->first()->data();
             unset($user->password);
-        }else{
+        } else {
             return null;
         }
         return (object) $user;
@@ -113,7 +113,7 @@ class FAuth
     public static function logout(): void
     {
         new self();
-       request()->session()->remove('authUserId');
+        request()->session()->remove('authUserId');
     }
 
     /**

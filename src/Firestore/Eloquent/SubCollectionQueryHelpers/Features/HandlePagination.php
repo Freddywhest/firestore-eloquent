@@ -7,7 +7,6 @@ use Livewire\Attributes\On;
 
 trait HandlePagination
 {
-
     public function previousPage($page, $pageName = 'page')
     {
         $this->setPage($page, $pageName);
@@ -17,6 +16,7 @@ trait HandlePagination
     {
         $this->setPage($page, $pageName);
     }
+
     #[On('gotoPageFromLivewireJavascript')]
     public function gotoPage($page, $pageName = 'page')
     {
@@ -44,8 +44,8 @@ trait HandlePagination
         $beforePaginatorMethod = 'updatingPaginators';
         $afterPaginatorMethod = 'updatedPaginators';
 
-        $beforeMethod = 'updating' . ucfirst(Str::camel($pageName));
-        $afterMethod = 'updated' . ucfirst(Str::camel($pageName));
+        $beforeMethod = 'updating'.ucfirst(Str::camel($pageName));
+        $afterMethod = 'updated'.ucfirst(Str::camel($pageName));
 
         if (method_exists($this, $beforePaginatorMethod)) {
             $this->{$beforePaginatorMethod}($page, $pageName);
@@ -66,7 +66,4 @@ trait HandlePagination
             $this->{$afterMethod}($page, null);
         }
     }
-
-
-
 }

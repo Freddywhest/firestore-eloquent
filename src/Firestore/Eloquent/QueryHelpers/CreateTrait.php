@@ -4,13 +4,10 @@
  * This trait provides the functionality to create a new document in Firestore collection.
  * It includes methods to check the type of a given value, filter the data to be stored in the document,
  * and validate required and fillable attributes of the model.
- *
- * @package Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers
  */
 
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers;
 
-use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreDataFormat;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ToArrayHelper;
 
 trait CreateTrait
@@ -18,7 +15,7 @@ trait CreateTrait
     /**
      * Returns the type of the given value.
      *
-     * @param mixed $value The value to check the type of.
+     * @param  mixed  $value  The value to check the type of.
      * @return string The type of the given value.
      */
     private function checkTypeInCreate($value)
@@ -29,16 +26,15 @@ trait CreateTrait
     /**
      * Create a new document in Firestore collection.
      *
-     * @param array $data The data to be stored in the document.
-     * @param mixed $id The ID of the document to be created.
-     * @param mixed $firestore The Firestore instance.
-     * @param array $fillable The fillable attributes of the model.
-     * @param array $required The required attributes of the model.
-     * @param array $default The default attributes of the model.
-     * @param string $model The name of the model.
-     * @param string $primaryKey The primary key of the model.
-     * @param array $fieldTypes The types of the attributes of the model.
-     *
+     * @param  array  $data  The data to be stored in the document.
+     * @param  mixed  $id  The ID of the document to be created.
+     * @param  mixed  $firestore  The Firestore instance.
+     * @param  array  $fillable  The fillable attributes of the model.
+     * @param  array  $required  The required attributes of the model.
+     * @param  array  $default  The default attributes of the model.
+     * @param  string  $model  The name of the model.
+     * @param  string  $primaryKey  The primary key of the model.
+     * @param  array  $fieldTypes  The types of the attributes of the model.
      * @return mixed The created document snapshot or an empty array if no data was provided.
      *
      * @throws \Exception If a required attribute is missing or if an attribute has an invalid type.
@@ -54,9 +50,9 @@ trait CreateTrait
 
             if (count($default) > 0) {
                 foreach ($default as $k => $v) {
-                    if (!isset($data[$k]) && in_array($k, $required) && in_array($k, $fillable) && $v) {
+                    if (! isset($data[$k]) && in_array($k, $required) && in_array($k, $fillable) && $v) {
                         $data[$k] = $v;
-                    } else if (isset($data[$k]) && in_array($k, $required) && in_array($k, $fillable) && !$v) {
+                    } elseif (isset($data[$k]) && in_array($k, $required) && in_array($k, $fillable) && ! $v) {
                         $data[$k] = $v;
                     }
                 }
@@ -66,13 +62,13 @@ trait CreateTrait
                 if (count($fieldTypes) > 0) {
                     if (isset($fieldTypes[$key])) {
                         if ($this->checkTypeInCreate($value) !== $fieldTypes[$key]) {
-                            throw new \Exception('"' . $key . '" expect type ' . $fieldTypes[$key] . ' but got ' . $this->checkTypeInCreate($value) . '.', 1);
+                            throw new \Exception('"'.$key.'" expect type '.$fieldTypes[$key].' but got '.$this->checkTypeInCreate($value).'.', 1);
                         }
                     }
                 }
                 if (in_array($key, $fillable)) {
-                    if (in_array($key, $required) && !$value) {
-                        return throw new \Exception('"' . $key . '" is required.', 1);
+                    if (in_array($key, $required) && ! $value) {
+                        return throw new \Exception('"'.$key.'" is required.', 1);
                     }
 
                     $filteredData = array_merge($filteredData, [$key => $value]);
@@ -81,8 +77,8 @@ trait CreateTrait
 
             if (count($required) > 0) {
                 foreach ($required as $value) {
-                    if (!isset($filteredData[$value])) {
-                        return throw new \Exception('"' . $value . '" is required.', 1);
+                    if (! isset($filteredData[$value])) {
+                        return throw new \Exception('"'.$value.'" is required.', 1);
                     }
                 }
             }
@@ -92,12 +88,12 @@ trait CreateTrait
                 $filteredData[$primaryKey] = $newDocument->id();
                 $newDocument->set($filteredData);
 
-                return new ToArrayHelper(queryRaw: $newDocument->snapshot(), model: $this->collection, collection: $this->model, single: "find");
+                return new ToArrayHelper(queryRaw: $newDocument->snapshot(), model: $this->collection, collection: $this->model, single: 'find');
             }
 
-            return new \Exception('Cannot create a new "' . $model . '" because fillable property in "' . $model . '" model is empty or undefined.', 1);
+            return new \Exception('Cannot create a new "'.$model.'" because fillable property in "'.$model.'" model is empty or undefined.', 1);
         } else {
-            return throw new \Exception('Cannot create a new "' . $model . '" because fillable property in "' . $model . '" model is empty or undefined.', 1);
+            return throw new \Exception('Cannot create a new "'.$model.'" because fillable property in "'.$model.'" model is empty or undefined.', 1);
         }
     }
 }

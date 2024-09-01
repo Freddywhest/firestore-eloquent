@@ -39,13 +39,13 @@ class FAuth
     {
         $className = config('firebase.auth_model') ?? 'App\FModels\User';
 
-        if (!class_exists($className)) {
+        if (! class_exists($className)) {
 
             $class = explode('\\', $className);
 
             return trigger_error(
-                'Model "' . end($class) . '" does not exists. ' .
-                    'Run artisan command: "php artisan make:fmodel ' . end($class) . '" to create "' . end($class) . '" model. You can check the documentation for help.',
+                'Model "'.end($class).'" does not exists. '.
+                    'Run artisan command: "php artisan make:fmodel '.end($class).'" to create "'.end($class).'" model. You can check the documentation for help.',
                 E_USER_NOTICE
             );
         } else {
@@ -55,54 +55,60 @@ class FAuth
 
     /**
      * Attempt to authenticate a user with the given email and password.
-     * @param array $args An array containing email and password.
+     *
+     * @param  array  $args  An array containing email and password.
      * @return bool Returns true if the authentication is successful, false otherwise.
      */
     public static function attempt(array $args): bool
     {
-        new self();
+        new self;
         $className = self::$className;
 
-        ["email" => $email, "password" => $password] = $args;
+        ['email' => $email, 'password' => $password] = $args;
         $user = $className::where(['email', '=', $email])->first()->data();
 
-        if (!$user->exists()) {
+        if (! $user->exists()) {
             return false;
         }
 
-        if (!Hash::check($password, $user->password)) {
+        if (! Hash::check($password, $user->password)) {
             return false;
         }
         Session::put('authUserId', $user->{(new $className)->primaryKey});
+
         return true;
     }
 
     /**
      * Get the authenticated user.
+     *
      * @return object|null Returns an object representing the authenticated user, or null if no user is authenticated.
      */
     public static function user(): ?object
     {
-        new self();
+        new self;
         $className = self::$className;
 
-        if (request()->session()->get("authUserId")) {
-            $user = $className::where([(new $className)->primaryKey, '=', request()->session()->get("authUserId")])->first()->data();
+        if (request()->session()->get('authUserId')) {
+            $user = $className::where([(new $className)->primaryKey, '=', request()->session()->get('authUserId')])->first()->data();
             unset($user->password);
         } else {
             return null;
         }
+
         return (object) $user;
     }
 
     /**
      * Check if a user is authenticated.
+     *
      * @return bool|null Returns true if a user is authenticated, false otherwise.
      */
     public static function check(): ?bool
     {
-        new self();
-        return Session::get("authUserId")
+        new self;
+
+        return Session::get('authUserId')
             ? true
             : false;
     }
@@ -112,17 +118,19 @@ class FAuth
      */
     public static function logout(): void
     {
-        new self();
+        new self;
         request()->session()->remove('authUserId');
     }
 
     /**
      * Get the ID of the authenticated user.
+     *
      * @return mixed|null Returns the ID of the authenticated user, or null if no user is authenticated.
      */
     public static function id()
     {
-        new self();
+        new self;
+
         return request()->session()->get('authUserId');
     }
 }

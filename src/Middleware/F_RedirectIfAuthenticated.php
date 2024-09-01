@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 class F_RedirectIfAuthenticated
 {
     public const HOME = 'home';
+
     /**
      * Handle an incoming request.
      *
@@ -22,9 +23,10 @@ class F_RedirectIfAuthenticated
          * @param  \Illuminate\Http\Request  $request
          * @return \Illuminate\Http\RedirectResponse|null
          */
-        if($request->session()->get('authUserId') != null || !empty($request->session()->get('authUserId'))){
+        if ($request->session()->get('authUserId') != null || ! empty($request->session()->get('authUserId'))) {
             return redirect()->route(config('firebase.guest_url') ?? self::HOME);
         }
+
         return $next($request);
     }
 }

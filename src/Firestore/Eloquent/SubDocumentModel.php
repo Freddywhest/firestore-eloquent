@@ -2,6 +2,10 @@
 
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent;
 
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\CreateTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ToArrayHelper;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\PaginateTrait as TraitsPaginateTrait;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\UpdateManyTrait as TraitsUpdateManyTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\AllTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\AndWhereTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\DeleteManyTrait;
@@ -10,27 +14,33 @@ use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\FirstTr
 use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\GetTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\OrWhereTrait;
 use Roddy\FirestoreEloquent\Firestore\Eloquent\SubCollectionQueryHelpers\WhereTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\CreateTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\ToArrayHelper;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\PaginateTrait as TraitsPaginateTrait;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\UpdateManyTrait as TraitsUpdateManyTrait;
 
 class SubDocumentModel
 {
-    use FirstOrFailTrait;
-    use FirstTrait,
-        WhereTrait,
-        OrWhereTrait,
+    use AllTrait,
         AndWhereTrait,
-        TraitsPaginateTrait,
-        DeleteManyTrait,
-        GetTrait,
         CreateTrait,
-        AllTrait;
+        DeleteManyTrait,
+        FirstTrait,
+        GetTrait,
+        OrWhereTrait,
+        TraitsPaginateTrait,
+        WhereTrait;
+    use FirstOrFailTrait;
     use TraitsUpdateManyTrait;
 
-    private $subCollectionName, $row, $query, $model, $collection;
+    private $subCollectionName;
+
+    private $row;
+
+    private $query;
+
+    private $model;
+
+    private $collection;
+
     private $direction;
+
     private $path;
 
     public function __construct($row, $subCollectionName, $model, $collection)
@@ -43,7 +53,7 @@ class SubDocumentModel
 
     public function firstOrFail()
     {
-        if (!$this->query) {
+        if (! $this->query) {
             $query = $this->row->reference()->collection($this->subCollectionName);
         } else {
             $query = $this->query;
@@ -60,7 +70,7 @@ class SubDocumentModel
 
     public function first()
     {
-        if (!$this->query) {
+        if (! $this->query) {
             $query = $this->row->reference()->collection($this->subCollectionName);
         } else {
             $query = $this->query;
@@ -87,7 +97,7 @@ class SubDocumentModel
 
     public function orderBy(string $path, ?string $direction = null)
     {
-        if ($direction && !in_array(strtoupper($direction), ['DESC', 'ASC'])) {
+        if ($direction && ! in_array(strtoupper($direction), ['DESC', 'ASC'])) {
             throw new \Exception('OrderBy direction should be either "DESC" or "ASC"', 1);
         }
 
@@ -119,6 +129,7 @@ class SubDocumentModel
             filters: $filters,
             row: $this->row
         );
+
         return $this;
     }
 
@@ -147,7 +158,7 @@ class SubDocumentModel
 
     public function get()
     {
-        if (!$this->query) {
+        if (! $this->query) {
             $query = $this->row->reference()->collection($this->subCollectionName);
         } else {
             $query = $this->query;
@@ -164,7 +175,7 @@ class SubDocumentModel
 
     public function paginate(int $limit, string $name = 'page', ?int $page = null): object
     {
-        if (!$this->query) {
+        if (! $this->query) {
             $query = $this->row->reference()->collection($this->subCollectionName);
         } else {
             $query = $this->query;
@@ -187,7 +198,7 @@ class SubDocumentModel
 
     public function count()
     {
-        if (!$this->query) {
+        if (! $this->query) {
             return $this->row->reference()->collection($this->subCollectionName)->count();
         }
 
@@ -196,7 +207,7 @@ class SubDocumentModel
 
     public function deleteMany()
     {
-        if (!$this->query) {
+        if (! $this->query) {
             $query = $this->row->reference()->collection($this->subCollectionName);
         } else {
             $query = $this->query;
@@ -205,7 +216,7 @@ class SubDocumentModel
         $this->fDeleteMany(query: $query);
     }
 
-    public  function create(array $data, array $fillable = [], array $required = [], array $default = [], array $fieldTypes = [], $primaryKey = 'id')
+    public function create(array $data, array $fillable = [], array $required = [], array $default = [], array $fieldTypes = [], $primaryKey = 'id')
     {
         return $this->fCreate(
             data: $data,
@@ -221,9 +232,9 @@ class SubDocumentModel
 
     public function limit($number)
     {
-        if (!$this->query) {
+        if (! $this->query) {
             if ($this->path) {
-                if (!$this->direction) {
+                if (! $this->direction) {
                     $query = $this->row->reference()->collection($this->subCollectionName)->orderBy($this->path)->limit($number);
                 } else {
                     $query = $this->row->reference()->collection($this->subCollectionName)->orderBy($this->path, $this->direction)->limit($number);
@@ -233,7 +244,7 @@ class SubDocumentModel
             }
         } else {
             if ($this->path) {
-                if (!$this->direction) {
+                if (! $this->direction) {
                     $query = $this->query->orderBy($this->path)->limit($number);
                 } else {
                     $query = $this->query->orderBy($this->path, $this->direction)->limit($number);
@@ -243,11 +254,12 @@ class SubDocumentModel
             }
         }
         if ($number == 1) {
-            return new ToArrayHelper(queryRaw: $query, model: $this->model, collection: $this->collection, single: "first");
+            return new ToArrayHelper(queryRaw: $query, model: $this->model, collection: $this->collection, single: 'first');
         } else {
             return new ToArrayHelper(queryRaw: $query, model: $this->model, collection: $this->collection);
         }
     }
+
     public function like(string $field, int|string $value, string $order = 'asc')
     {
         $this->value = $value;
@@ -258,6 +270,8 @@ class SubDocumentModel
     }
 
     private $field;
+
     private $value;
+
     private $order;
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Roddy\FirestoreEloquent;
 
 use Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\HandlePagination;

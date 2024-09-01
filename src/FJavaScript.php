@@ -1,4 +1,5 @@
 <?php
+
 namespace Roddy\FirestoreEloquent;
 
 trait FJavaScript
@@ -128,4 +129,3 @@ trait FJavaScript
         ";
     }
 }
-

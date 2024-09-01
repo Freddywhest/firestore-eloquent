@@ -9,16 +9,14 @@
  * @method string getStub() Get the stub file for the generator.
  * @method string getDefaultNamespace(string $rootNamespace) Get the default namespace for the class.
  * @method array getOptions() Get the console command options.
- *
- * @package Roddy\FirestoreEloquent\Firestore\Eloquent\traits
  */
 
 namespace Roddy\FirestoreEloquent\Console\Commands;
 
-use Illuminate\Console\GeneratorCommand;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Attribute\AsCommand;
 use Illuminate\Console\Concerns\CreatesMatchingTest;
+use Illuminate\Console\GeneratorCommand;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Input\InputOption;
 
 #[AsCommand(name: 'make:fmodel')]
 class MakeModel extends GeneratorCommand
@@ -81,7 +79,6 @@ class MakeModel extends GeneratorCommand
                         : __DIR__.$stub;
     }
 
-
     /**
      * Get the default namespace for the class.
      *
@@ -106,5 +103,4 @@ class MakeModel extends GeneratorCommand
             ['collection', 'c', InputOption::VALUE_REQUIRED, 'The model collection name'],
         ];
     }
-
 }

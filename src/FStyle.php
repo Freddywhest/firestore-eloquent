@@ -1,14 +1,15 @@
 <?php
+
 namespace Roddy\FirestoreEloquent;
 
 trait FStyle
 {
     private function loadStylesForLivewirePagination()
     {
-        return "
+        return '
             <style>
                 [fpagination\\:loading]{display:none}
             </style>
-        ";
+        ';
     }
 }

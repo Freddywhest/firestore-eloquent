@@ -3,8 +3,8 @@
  * This trait provides the functionality to update multiple documents in Firestore collection.
  * It includes methods to check the type of a given value, filter the data to be stored in the document,
  * and validate required and fillable attributes of the model.
- * @package Roddy\FirestoreEloquent
 */
+
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers;
 
 use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreDataFormat;
@@ -14,7 +14,7 @@ trait UpdateManyTrait
     /**
      * Check the type of a given value.
      *
-     * @param mixed $value The value to check the type of.
+     * @param  mixed  $value  The value to check the type of.
      * @return string The type of the given value.
      */
     private function checkType($value)
@@ -29,15 +29,16 @@ trait UpdateManyTrait
     /**
      * Update multiple documents in Firestore collection.
      *
-     * @param array $data The data to update.
-     * @param mixed $query The query to filter documents to update.
-     * @param mixed $firestore The Firestore instance.
-     * @param string $primaryKey The primary key of the collection.
-     * @param array $fillable The fields that can be updated.
-     * @param array $required The fields that are required.
-     * @param array $fieldTypes The expected types of the fields.
-     * @throws \Exception If an error occurs during the update process.
+     * @param  array  $data  The data to update.
+     * @param  mixed  $query  The query to filter documents to update.
+     * @param  mixed  $firestore  The Firestore instance.
+     * @param  string  $primaryKey  The primary key of the collection.
+     * @param  array  $fillable  The fields that can be updated.
+     * @param  array  $required  The fields that are required.
+     * @param  array  $fieldTypes  The expected types of the fields.
      * @return void
+     *
+     * @throws \Exception If an error occurs during the update process.
      */
     protected function fUpdateMany(array $data, $query, $primaryKey, $fillable, $required, $fieldTypes, $model, $collection)
     {
@@ -45,25 +46,25 @@ trait UpdateManyTrait
 
         $result = [];
 
-        if(isset($data[$primaryKey])){
+        if (isset($data[$primaryKey])) {
             unset($data[$primaryKey]);
         }
 
         foreach ($data as $key => $value) {
-            if(!$key){
-                throw new \Exception("Invalid update field null => ".$value .". Expected path => value but got null => value", 1);
+            if (! $key) {
+                throw new \Exception('Invalid update field null => '.$value.'. Expected path => value but got null => value', 1);
             }
 
-            if(count($fieldTypes) > 0){
-                if(isset($fieldTypes[$key])){
-                    if($this->checkType($value) !== $fieldTypes[$key]){
+            if (count($fieldTypes) > 0) {
+                if (isset($fieldTypes[$key])) {
+                    if ($this->checkType($value) !== $fieldTypes[$key]) {
                         throw new \Exception('"'.$key.'" expect type '.$fieldTypes[$key].' but got '.$this->checkType($value).'.', 1);
                     }
                 }
             }
 
-            if(in_array($key, $fillable)){
-                if(in_array($key, $required) && !$value){
+            if (in_array($key, $fillable)) {
+                if (in_array($key, $required) && ! $value) {
                     return throw new \Exception('"'.$key.'" is required.', 1);
                 }
 
@@ -71,8 +72,7 @@ trait UpdateManyTrait
             }
         }
 
-
-        if(count($filteredData) > 0){
+        if (count($filteredData) > 0) {
             $rows = $query->documents()->rows();
             foreach ($rows as $row) {
                 try {

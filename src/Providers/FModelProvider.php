@@ -6,25 +6,25 @@ use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Roddy\FirestoreEloquent\Console\Commands\MakeModel;
+use Roddy\FirestoreEloquent\Firestore\Url\SetLivewireUrl;
 use Roddy\FirestoreEloquent\FJavaScript;
 use Roddy\FirestoreEloquent\FStyle;
-use Roddy\FirestoreEloquent\Firestore\Url\SetLivewireUrl;
 
 class FModelProvider extends ServiceProvider
 {
     use FJavaScript;
     use FStyle;
+
     /**
      * Bootstrap services.
      *
      * @return void
      */
-    public function boot(\Illuminate\Routing\Router  $router, Kernel $kernel)
+    public function boot(\Illuminate\Routing\Router $router, Kernel $kernel)
     {
         /**
          * Set Livewire Url
          */
-
         $kernel->appendMiddlewareToGroup('web', \Illuminate\Session\Middleware\StartSession::class);
         $kernel->appendMiddlewareToGroup('web', \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class);
         $kernel->appendMiddlewareToGroup('web', \Illuminate\View\Middleware\ShareErrorsFromSession::class);
@@ -36,7 +36,7 @@ class FModelProvider extends ServiceProvider
         app('router')->aliasMiddleware('f.guest', \Roddy\FirestoreEloquent\Middleware\F_RedirectIfAuthenticated::class);
 
         $this->publishes([
-            __DIR__ . '/../config/firebase.php' => config_path('firebase.php'),
+            __DIR__.'/../config/firebase.php' => config_path('firebase.php'),
         ]);
 
         $this->commands(
@@ -58,7 +58,6 @@ class FModelProvider extends ServiceProvider
 
     /**
      * Register any application services.
-     * @return void
      */
     public function register(): void
     {
@@ -66,17 +65,17 @@ class FModelProvider extends ServiceProvider
          * Merge the configuration from firebase.php file with the 'firebase' key.
          */
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/firebase.php',
+            __DIR__.'/../config/firebase.php',
             'firebase'
         );
 
-        $this->app->config["filesystems.disks.firestore"] = [
+        $this->app->config['filesystems.disks.firestore'] = [
             'driver' => 'local',
             'root' => storage_path('firestore'),
         ];
 
         $this->app->bind('fauth', function () {
-            return new \Roddy\FirestoreEloquent\Auth\FAuth();
+            return new \Roddy\FirestoreEloquent\Auth\FAuth;
         });
 
         $this->app->bind('fmodel', function () {

@@ -10,10 +10,6 @@ class SetLivewireUrl
 {
     /**
      * Set the current URL in session for Firestore Eloquent.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
      */
     public function handle(Request $request, Closure $next): mixed
     {
@@ -25,7 +21,7 @@ class SetLivewireUrl
             return $next($request);
         }
 
-        if(session()->has('roddy-eloquent-urls.current')){
+        if (session()->has('roddy-eloquent-urls.current')) {
             session()->forget('roddy-eloquent-urls.current');
         }
 
@@ -36,8 +32,6 @@ class SetLivewireUrl
 
     /**
      * Determine if the current request is a Livewire request.
-     *
-     * @return bool
      */
     protected function isLivewireRequest(): bool
     {
@@ -46,9 +40,6 @@ class SetLivewireUrl
 
     /**
      * Check if the request method is not supported.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return bool
      */
     protected function isMethodNotSupported(Request $request): bool
     {

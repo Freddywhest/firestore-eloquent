@@ -2,7 +2,6 @@
 
 /**
  * This trait provides the functionality to retrieve the first result of a Firestore query and format it into a FirestoreDataFormat object.
- * @package Roddy\FirestoreEloquent
  */
 
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers;
@@ -14,10 +13,9 @@ trait FirstTrait
     /**
      * Retrieve the first result of a Firestore query and format it into a FirestoreDataFormat object.
      *
-     * @param object $query The Firestore query object.
-     * @param string $collection The name of the Firestore collection.
-     * @param string $model The name of the Eloquent model.
-     *
+     * @param  object  $query  The Firestore query object.
+     * @param  string  $collection  The name of the Firestore collection.
+     * @param  string  $model  The name of the Eloquent model.
      * @return Roddy\FirestoreEloquent\Firestore\Eloquent\QueryHelpers\Features\IToArrayHelper
      */
     public function fFirst($path, $direction, $query, $collection, $model, $field, $value, $order)
@@ -27,11 +25,11 @@ trait FirstTrait
                 $newQuery = $query
                     ->orderBy($field, $order)
                     ->startAt([$value])
-                    ->endAt([$value . "\uf8ff"])
+                    ->endAt([$value."\uf8ff"])
                     ->limit(1);
             } else {
                 if ($path) {
-                    if (!$direction) {
+                    if (! $direction) {
                         $newQuery = $query->orderBy($path)->limit(1);
                     } else {
                         $newQuery = $query->orderBy($path, $direction)->limit(1);
@@ -45,11 +43,11 @@ trait FirstTrait
                 $newQuery = $this->fConnection($this->collection)
                     ->orderBy($field, $order)
                     ->startAt([$value])
-                    ->endAt([$value . "\uf8ff"])
+                    ->endAt([$value."\uf8ff"])
                     ->limit(1);
             } else {
                 if ($path) {
-                    if (!$direction) {
+                    if (! $direction) {
                         $newQuery = $this->fConnection($this->collection)->orderBy($path)->limit(1);
                     } else {
                         $newQuery = $this->fConnection($this->collection)->orderBy($path, $direction)->limit(1);
@@ -60,7 +58,6 @@ trait FirstTrait
             }
         }
 
-
-        return new ToArrayHelper(queryRaw: $newQuery, model: $model, collection: $collection, single: "first");
+        return new ToArrayHelper(queryRaw: $newQuery, model: $model, collection: $collection, single: 'first');
     }
 }

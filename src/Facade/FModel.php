@@ -33,13 +33,18 @@ class FModel
      * @property array $default
      * @property array $fieldTypes
      */
-
     protected $collection;
+
     private $model;
+
     protected $primaryKey = 'id';
+
     protected $fillable = [];
+
     protected $required = [];
+
     protected $default = [];
+
     protected $fieldTypes = [];
 
     public function __construct()
@@ -48,16 +53,16 @@ class FModel
          * Check if FIREBASE_PROJECT_ID is set in .env file or config file.
          * If not set, throw an exception.
          */
-        if (!config('firebase.projects.app.project_id', env('FIREBASE_PROJECT_ID'))) {
-            throw new \Exception("FIREBASE_PROJECT_ID not set in .env file.");
+        if (! config('firebase.projects.app.project_id', env('FIREBASE_PROJECT_ID'))) {
+            throw new \Exception('FIREBASE_PROJECT_ID not set in .env file.');
         }
 
         /**
          * Get the class name and set the collection name if not already set.
          */
         $className = explode('\\', $this::class);
-        if (!$this->collection) {
-            $this->collection = end($className) . 's';
+        if (! $this->collection) {
+            $this->collection = end($className).'s';
         }
 
         /**
@@ -69,7 +74,7 @@ class FModel
     /**
      * Magic method to retrieve the value of the primary key attribute.
      *
-     * @param string $primaryKey The name of the primary key attribute.
+     * @param  string  $primaryKey  The name of the primary key attribute.
      * @return mixed The value of the primary key attribute.
      */
     public function __get($name)
@@ -79,14 +84,14 @@ class FModel
         }
     }
 
-
     /**
      * Magic method to call static methods on the class.
-     * @param string $name The name of the method to call.
-     * @param array $arguments The arguments to pass to the method.
+     *
+     * @param  string  $name  The name of the method to call.
+     * @param  array  $arguments  The arguments to pass to the method.
      * @return mixed The result of the method call.
+     *
      * @throws \Exception If the method does not exist.
-     * 
      */
     public static function __callStatic($name, $arguments)
     {
@@ -101,7 +106,7 @@ class FModel
                 fieldTypes: (new static)->fieldTypes
             ))->$name(...$arguments);
         } catch (\Throwable $th) {
-            throw new \Exception("Call to undefined method " . static::class . "::" . $name . "()." . ' Main Error:- ' . $th->getMessage(), 1);
+            throw new \Exception('Call to undefined method '.static::class.'::'.$name.'().'.' Main Error:- '.$th->getMessage(), 1);
         }
     }
 }

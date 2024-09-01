@@ -7,11 +7,14 @@ use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreDataFormat;
 class ToArrayHelper
 {
     private $queryRaw;
+
     private $model;
+
     private string $single;
+
     private $collection;
 
-    public function __construct($queryRaw, $model, $collection, $single = "default")
+    public function __construct($queryRaw, $model, $collection, $single = 'default')
     {
         $this->queryRaw = $queryRaw;
         $this->model = $model;
@@ -31,14 +34,15 @@ class ToArrayHelper
             throw new \Exception("Method \"{$name}\" does not exist on method \"get()\".", 1);
         }
     }
+
     public function data()
     {
         $result = [];
         $queryData = $this->queryData();
-        if (!$queryData) {
+        if (! $queryData) {
             return $result;
         }
-        if ($this->single == "find") {
+        if ($this->single == 'find') {
             if ($queryData->exists()) {
                 return new FirestoreDataFormat(
                     row: $queryData,
@@ -47,12 +51,13 @@ class ToArrayHelper
                 );
             }
 
-            return new ItemNotFoundHelper();
+            return new ItemNotFoundHelper;
         }
 
         if ($queryData->count() > 0) {
-            if ($this->single == "first" || $this->single == "firstOrFail") {
+            if ($this->single == 'first' || $this->single == 'firstOrFail') {
                 $row = $queryData->documents()->rows()[0];
+
                 return new FirestoreDataFormat(
                     row: $row,
                     collectionName: $this->collection,
@@ -72,9 +77,9 @@ class ToArrayHelper
             return $result;
         }
 
-        if ($this->single == "first" || $this->single == "find") {
-            return new ItemNotFoundHelper();
-        } else if ($this->single == "firstOrFail") {
+        if ($this->single == 'first' || $this->single == 'find') {
+            return new ItemNotFoundHelper;
+        } elseif ($this->single == 'firstOrFail') {
             return abort(404);
         } else {
             return [];
@@ -90,7 +95,7 @@ class ToArrayHelper
     {
         $queryData = $this->queryData();
 
-        if ($this->single == "find") {
+        if ($this->single == 'find') {
             if ($queryData->exists()) {
                 return collect($queryData->data());
             }
@@ -100,7 +105,7 @@ class ToArrayHelper
 
         if ($queryData->count() > 0) {
             $rows = $queryData->documents()->rows();
-            if ($this->single == "first" || $this->single == "firstOrFail") {
+            if ($this->single == 'first' || $this->single == 'firstOrFail') {
                 return collect($rows)->map(function ($item) {
                     return $item->data();
                 })->first();

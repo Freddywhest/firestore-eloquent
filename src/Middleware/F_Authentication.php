@@ -25,15 +25,17 @@ class F_Authentication
          * @param  \Closure  $next
          * @return mixed
          */
-        if($request->session()->get('authUserId') === null){
+        if ($request->session()->get('authUserId') === null) {
             $request->session()->put('fromUrl', $request->fullUrl());
+
             return redirect()->route(config('firebase.auth_url') ?? 'login');
         }
 
         $response = $next($request);
-        $response->headers->set('Cache-Control','nocache, no-store, max-age=0, must-revalidate');
-        $response->headers->set('Pragma','no-cache');
-        $response->headers->set('Expires','Sun, 02 Jan 1990 00:00:00 GMT');
+        $response->headers->set('Cache-Control', 'nocache, no-store, max-age=0, must-revalidate');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
+
         return $response;
     }
 }

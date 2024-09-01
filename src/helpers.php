@@ -8,7 +8,8 @@ use Roddy\FirestoreEloquent\Auth\FAuth;
  * @return \FAuth
  */
 if (! function_exists('fauth')) {
-    function fauth(){
-        return new FAuth();
+    function fauth()
+    {
+        return new FAuth;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Roddy\FirestoreEloquent\Providers;
 
 use Illuminate\Support\Facades\Blade;
@@ -17,11 +18,11 @@ class FModelProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot(\Illuminate\Routing\Router  $router, \App\Http\Kernel $kernel)
+    public function boot(\Illuminate\Routing\Router  $router, Illuminate\Foundation\Http\Kernel $kernel)
     {
         /**
          * Set Livewire Url
-        */
+         */
 
         $kernel->appendMiddlewareToGroup('web', \Illuminate\Session\Middleware\StartSession::class);
         $kernel->appendMiddlewareToGroup('web', \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class);
@@ -34,7 +35,7 @@ class FModelProvider extends ServiceProvider
         app('router')->aliasMiddleware('f.guest', \Roddy\FirestoreEloquent\Middleware\F_RedirectIfAuthenticated::class);
 
         $this->publishes([
-            __DIR__.'/../config/firebase.php' => config_path('firebase.php'),
+            __DIR__ . '/../config/firebase.php' => config_path('firebase.php'),
         ]);
 
         $this->commands(
@@ -64,7 +65,8 @@ class FModelProvider extends ServiceProvider
          * Merge the configuration from firebase.php file with the 'firebase' key.
          */
         $this->mergeConfigFrom(
-            __DIR__.'/../config/firebase.php', 'firebase'
+            __DIR__ . '/../config/firebase.php',
+            'firebase'
         );
 
         $this->app->config["filesystems.disks.firestore"] = [

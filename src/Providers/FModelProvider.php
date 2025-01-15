@@ -18,7 +18,7 @@ class FModelProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot(\Illuminate\Routing\Router  $router, Illuminate\Foundation\Http\Kernel $kernel)
+    public function boot(\Illuminate\Routing\Router  $router, \Illuminate\Foundation\Http\Kernel $kernel)
     {
         /**
          * Set Livewire Url
@@ -28,7 +28,7 @@ class FModelProvider extends ServiceProvider
         $kernel->appendMiddlewareToGroup('web', \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class);
         $kernel->appendMiddlewareToGroup('web', \Illuminate\View\Middleware\ShareErrorsFromSession::class);
         $kernel->appendMiddlewareToGroup('web', \App\Http\Middleware\EncryptCookies::class);
-        $kernel->appendMiddlewareToGroup('web', \Illuminate\Routing\Middleware\SubstituteBindings::class);
+        $kernel->appendMiddlewareToGroup('web', \Illuminate\Routing\Middlewa\re\SubstituteBindings::class);
         $kernel->appendMiddlewareToGroup('web', SetLivewireUrl::class);
 
         app('router')->aliasMiddleware('f.auth', \Roddy\FirestoreEloquent\Middleware\F_Authentication::class);

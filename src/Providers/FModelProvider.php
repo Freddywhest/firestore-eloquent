@@ -5,14 +5,9 @@ namespace Roddy\FirestoreEloquent\Providers;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Roddy\FirestoreEloquent\Console\Commands\MakeModel;
-use Roddy\FirestoreEloquent\Firestore\Url\SetLivewireUrl;
-use Roddy\FirestoreEloquent\FJavaScript;
-use Roddy\FirestoreEloquent\FStyle;
 
 class FModelProvider extends ServiceProvider
 {
-    use FJavaScript;
-    use FStyle;
     /**
      * Bootstrap services.
      *
@@ -27,9 +22,8 @@ class FModelProvider extends ServiceProvider
         $kernel->appendMiddlewareToGroup('web', \Illuminate\Session\Middleware\StartSession::class);
         $kernel->appendMiddlewareToGroup('web', \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class);
         $kernel->appendMiddlewareToGroup('web', \Illuminate\View\Middleware\ShareErrorsFromSession::class);
-        $kernel->appendMiddlewareToGroup('web', \App\Http\Middleware\EncryptCookies::class);
-        $kernel->appendMiddlewareToGroup('web', \Illuminate\Routing\Middlewa\re\SubstituteBindings::class);
-        $kernel->appendMiddlewareToGroup('web', SetLivewireUrl::class);
+        $kernel->appendMiddlewareToGroup('web', \Illuminate\Cookie\Middleware\EncryptCookies::class);
+        $kernel->appendMiddlewareToGroup('web', \Illuminate\Routing\Middleware\SubstituteBindings::class);
 
         app('router')->aliasMiddleware('f.auth', \Roddy\FirestoreEloquent\Middleware\F_Authentication::class);
         app('router')->aliasMiddleware('f.guest', \Roddy\FirestoreEloquent\Middleware\F_RedirectIfAuthenticated::class);
@@ -44,14 +38,6 @@ class FModelProvider extends ServiceProvider
 
         Blade::if('fauth', function () {
             return fauth()->check();
-        });
-
-        Blade::directive('fScriptsForLivewirePagination', function () {
-            return $this->loadJavascriptForLivewirePagination();
-        });
-
-        Blade::directive('fStyleForLivewirePagination', function () {
-            return $this->loadStylesForLivewirePagination();
         });
     }
 
@@ -78,6 +64,9 @@ class FModelProvider extends ServiceProvider
             return new \Roddy\FirestoreEloquent\Auth\FAuth();
         });
 
+        // Bind 'fmodel' to the service container to create a singleton instance of FModel
+        // This allows accessing the FModel class through the service container or facade
+        // The binding is used to resolve dependencies and create new instances when needed
         $this->app->bind('fmodel', function () {
             return $this->app->make('\Roddy\FirestoreEloquent\Firestore\Eloquent\FModel');
         });

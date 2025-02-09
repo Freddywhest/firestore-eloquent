@@ -64,7 +64,7 @@ class FAuth
         $className = self::$className;
 
         ["email" => $email, "password" => $password] = $args;
-        $user = $className::where(['email', '=', $email])->first()->data();
+        $user = $className::where(['email', '=', $email])->first();
 
         if (!$user->exists()) {
             return false;
@@ -87,7 +87,7 @@ class FAuth
         $className = self::$className;
 
         if (request()->session()->get("authUserId")) {
-            $user = $className::where([(new $className)->primaryKey, '=', request()->session()->get("authUserId")])->first()->data();
+            $user = $className::where([(new $className)->primaryKey, '=', request()->session()->get("authUserId")])->first();
             unset($user->password);
         } else {
             return null;

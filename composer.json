@@ -1,35 +1,42 @@
 {
-    "name": "roddy/firestore-eloquent",
-    "description": "Firestore Eloquent, an object-relational mapper (ORM) that makes it enjoyable to interact with your database. When using Eloquent, each firestore collection has a corresponding \"Model\"/\"Class\" that is used to interact with that collection. In addition to retrieving records from the firestore collection, Eloquent models/classes allow you to insert, update, and delete records from the collection as well.",
-    "type": "library",
-    "license": "MIT",
-    "require": {
-        "google/cloud-firestore": "*",
-        "google/cloud-storage": "*",
-        "php": "^8.1"
+  "name": "roddy/firestore-eloquent",
+  "description": "Firestore Eloquent, an object-relational mapper (ORM) that makes it enjoyable to interact with your database. When using Eloquent, each firestore collection has a corresponding \\\"Model\\\"/\\\"Class\\\" that is used to interact with that collection. In addition to retrieving records from the firestore collection, Eloquent models/classes allow you to insert, update, and delete records from the collection as well.",
+  "type": "library",
+  "require": {
+    "illuminate/http": "^11.41",
+    "illuminate/pagination": "^11.41",
+    "illuminate/support": "^11.41",
+    "nesbot/carbon": "^3.8",
+    "google/cloud-storage": "^1.46",
+    "illuminate/session": "^11.41",
+    "illuminate/config": "^11.41",
+    "illuminate/filesystem": "^11.41"
+  },
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Roddy\\FirestoreEloquent\\": "src/"
     },
-    "autoload": {
-        "psr-4": {
-            "Roddy\\FirestoreEloquent\\": "src/"
-        },
-        "files": [
-            "src/helpers.php"
-        ]
-    },
-    "authors": [
-        {
-            "name": "Alfred Nti",
-            "email": "alfrednti5000@gmail.com"
-        }
-    ],
-    "extra" : {
-        "laravel" : {
-            "providers" : [
-                "Roddy\\FirestoreEloquent\\Providers\\FModelProvider"
-            ],
-            "aliases" : {
-                "FAuth" : "Roddy\\FirestoreEloquent\\Auth\\FAuth"
-            }
-        }
+    "files": [
+      "src/helpers.php"
+    ]
+  },
+  "authors": [
+    {
+      "name": "Alfred Nti",
+      "email": "alfrednti5000@gmail.com"
     }
+  ],
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Roddy\\FirestoreEloquent\\Providers\\FModelProvider"
+      ],
+      "aliases": {
+        "FAuth": "Roddy\\FirestoreEloquent\\Auth\\FAuth"
+      }
+    }
+  }
 }

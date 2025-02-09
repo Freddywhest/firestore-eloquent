@@ -4,9 +4,9 @@ namespace Roddy\FirestoreEloquent\Firestore\Relations;
 
 use Roddy\FirestoreEloquent\Facade\FModel;
 
-trait FHasOne
+trait FBelongsTo
 {
-    public function fHasOne(string $related, ?string $foreignKey = null, ?string $localKey = null)
+    public function fBelongsTo(string $related, ?string $foreignKey = null, ?string $localKey = null)
     {
         if (!$related) {
             throw new \Exception("Related class not provided");
@@ -34,7 +34,7 @@ trait FHasOne
             'related' => $related,
             'foreignKey' => $foreignKey ?? (new $related)->primaryKey,
             'localKey' => $localKey ?? $this->primaryKey,
-            'relation' => 'hasOne'
+            'relation' => 'belongsTo'
         ];
     }
 }

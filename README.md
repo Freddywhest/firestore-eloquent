@@ -20,8 +20,6 @@ This package is a customized version of Laravel Eloquent designed for seamless i
 ### Requirements
 
 - [PHP >= 8.1](https://php.net)
-- [gRPC extension](https://cloud.google.com/php/grpc)
-- [Any requirements found on Cloud Firestore for PHP](https://cloud.google.com/php/docs/reference/cloud-firestore/latest)
 - [Laravel >= 9](https://laravel.com/docs/9.x) (Recommeded [Latest Laravel](https://laravel.com))
 - [Composer](https://getcomposer.org/)
 
@@ -31,17 +29,13 @@ This package is a customized version of Laravel Eloquent designed for seamless i
    ```bash
     composer require roddy/firestore-eloquent
    ```
-2. Copy and paste this to your **.env** file and replace `path/to/firebase-credentials.json` with the path to your credentials json file.
+2. Copy and paste this to your **.env** file and replace `your-project-id` with your project id.
 
-   ```bash
-   GOOGLE_APPLICATION_CREDENTIALS=path/to/firebase-credentials.json
-   ```
-
-3. Copy and paste this to your **.env** file and replace `your-project-id` with your project id.
    ```php
    FIREBASE_PROJECT_ID=your-project-id
    ```
-4. Publish the package configuration using Artisan
+
+3. Publish the package configuration using Artisan
    ```bash
    php artisan vendor:publish --provider="Roddy\FirestoreEloquent\Providers\FModelProvider" --force
    ```

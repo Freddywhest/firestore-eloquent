@@ -143,7 +143,7 @@ trait WhereQueries
                 }
 
                 $s = new FsFilters();
-                $formattedDate = $s->convertToFirestoreFormat(Carbon::parse($value)->toIso8601String());
+                $formattedDate = $s->convertToFirestoreFormat($value);
                 $filter = $s->field($field, $operator, $formattedDate);
                 $d[] = $filter;
             }
@@ -168,7 +168,7 @@ trait WhereQueries
             }
 
             $s = new FsFilters();
-            $formattedDate = $s->convertToFirestoreFormat(Carbon::parse($value)->toIso8601String());
+            $formattedDate = $s->convertToFirestoreFormat($value);
             $filter = $s->field($field, $operator, $formattedDate);
 
             $this->whereDate = $filter;

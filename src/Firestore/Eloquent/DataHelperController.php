@@ -2,6 +2,8 @@
 
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent;
 
+use Illuminate\Support\Str;
+
 
 final class DataHelperController
 {
@@ -9,6 +11,12 @@ final class DataHelperController
 
     public function __call($name, $arguments)
     {
+        $sub = Str::camel('sub ' . $name);
+        if (method_exists($this->modelClass, $sub)) {
+            $subCollection = (new $this->modelClass)->$sub();
+            return $this->subCollection($subCollection);
+        }
+
         if (method_exists($this->modelClass, $name)) {
             $result =  (new $this->modelClass)->$name(...$arguments);
             if (is_array($result) && isset($result['relation'])) {
@@ -23,6 +31,64 @@ final class DataHelperController
         }
 
         throw new \Exception("Method {$name} not found in " . $this->modelClass);
+    }
+
+    private function subCollection(array $details)
+    {
+        [
+            'subCollectionId' => $subCollectionId,
+            'primaryKey' => $primaryKey,
+            'fillableFields' => $fillableFields,
+            'requiredFields' => $requiredFields,
+            'defaultFields' => $defaultFields,
+            'fieldTypes' => $fieldTypes,
+            'hiddenFields' => $hiddenFields,
+            'keyToUse' => $keyToUse,
+        ] = $details;
+
+        if (!isset($this->data[$keyToUse ?? $this->primaryKey])) {
+            throw new \Exception("Key to use [" . ($keyToUse ?? $this->primaryKey) . "] not found. Read the subCollection method documentation for more information.");
+        }
+
+        if (!is_string($subCollectionId) || empty($subCollectionId)) {
+            throw new \Exception("Sub collection name/id must be a string. Read the subCollection method documentation for more information.");
+        }
+
+        if (!is_string($primaryKey) || empty($primaryKey)) {
+            throw new \Exception("Primary key must be a string. Read the subCollection method documentation for more information.");
+        }
+
+        if (!is_array($fillableFields)) {
+            throw new \Exception("Fillable fields must be an array. Read the subCollection method documentation for more information.");
+        }
+
+        if (!is_array($requiredFields)) {
+            throw new \Exception("Required fields must be an array. Read the subCollection method documentation for more information.");
+        }
+
+        if (!is_array($defaultFields)) {
+            throw new \Exception("Default fields must be an array. Read the subCollection method documentation for more information.");
+        }
+
+        if (!is_array($fieldTypes)) {
+            throw new \Exception("Field types must be an array. Read the subCollection method documentation for more information.");
+        }
+
+        if (!is_array($hiddenFields)) {
+            throw new \Exception("Hidden fields must be an array. Read the subCollection method documentation for more information.");
+        }
+
+        return new FClient(
+            collection: $this->collection . '/' . $this->data[$keyToUse ?? $this->primaryKey] . '/' . $subCollectionId,
+            primaryKey: $primaryKey,
+            fillable: $fillableFields,
+            required: $requiredFields,
+            default: $defaultFields,
+            fieldTypes: $fieldTypes,
+            model: $this->modelClass,
+            hidden: $hiddenFields,
+            modelClass: $this->modelClass
+        );
     }
 
     public function __get($key)

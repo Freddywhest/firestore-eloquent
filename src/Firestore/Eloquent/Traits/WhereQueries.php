@@ -94,12 +94,12 @@ trait WhereQueries
         }
 
         foreach ($array as $item) {
-            if (empty($item)) {
+            if (empty($item) && !is_bool($item)) {
                 return false;
             }
             if (is_array($item)) {
                 foreach ($item as $subItem) {
-                    if (empty($subItem)) {
+                    if (empty($subItem) && !is_bool($subItem)) {
                         return false;
                     }
                     if (is_array($subItem)) {

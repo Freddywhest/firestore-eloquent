@@ -7,7 +7,7 @@
     "illuminate/pagination": "9.* || 10.* || 11.*",
     "illuminate/support": "9.* || 10.* || 11.*",
     "nesbot/carbon": "2.* || 3.*",
-    "google/cloud-storage": "^1.46",
+    "google/cloud-storage": "1.*",
     "illuminate/session": "9.* || 10.* || 11.*",
     "illuminate/config": "9.* || 10.* || 11.*",
     "illuminate/filesystem": "9.* || 10.* || 11.*",

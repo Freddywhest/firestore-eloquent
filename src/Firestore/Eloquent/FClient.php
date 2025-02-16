@@ -64,8 +64,15 @@ final class FClient
         }
 
         if ($this->orderBy || $this->limit || $this->offset || $this->select || $limit || $isAggregation || !empty($whereQueries)) {
+            $array = explode("/", $this->collection);
+            if (count($array) == 1) {
+                $doc = $array[0];
+            } else {
+                $doc = end($array);
+            }
+
             $this->structuredQuery["structuredQuery"]["from"] = [
-                ["collectionId" => $this->collection]
+                ["collectionId" => $doc]
             ];
         }
 

@@ -6,11 +6,12 @@
     "illuminate/http": "9.* || 10.* || 11.*",
     "illuminate/pagination": "9.* || 10.* || 11.*",
     "illuminate/support": "9.* || 10.* || 11.*",
-    "nesbot/carbon": "^3.8",
+    "nesbot/carbon": "2.* || 3.*",
     "google/cloud-storage": "^1.46",
     "illuminate/session": "9.* || 10.* || 11.*",
     "illuminate/config": "9.* || 10.* || 11.*",
-    "illuminate/filesystem": "9.* || 10.* || 11.*"
+    "illuminate/filesystem": "9.* || 10.* || 11.*",
+    "php": ">= 8.0"
   },
   "license": "MIT",
   "autoload": {

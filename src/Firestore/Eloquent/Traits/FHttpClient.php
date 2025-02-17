@@ -14,6 +14,10 @@ trait FHttpClient
     try {
       $url = $this->FIRESTORE_URL . $this->FIREBASE_PROJECT_ID . $this->FIRESTORE_URL_DATABASE . ($use_prefix ? '/' : '') . $document . ($id ? '/' . $id : '');
       $req = Http::get($url);
+      if ($req->status() === 404) {
+        return collect([]);
+      }
+
       if ($req->failed()) {
         throw new \Exception($req->body());
       }
@@ -42,6 +46,10 @@ trait FHttpClient
         ($param ? $param : '');
 
       $req = Http::post($url, $data);
+      if ($req->status() === 404) {
+        return collect([]);
+      }
+
       if ($req->failed()) {
         throw new \Exception($req->body());
       }
@@ -68,6 +76,11 @@ trait FHttpClient
         $document . '/' . $id;
 
       $req = Http::patch($url, $data);
+
+      if ($req->status() === 404) {
+        return collect([]);
+      }
+
       if ($req->failed()) {
         throw new \Exception($req->body());
       }
@@ -107,47 +120,3 @@ trait FHttpClient
     }
   }
 }
-
-
-/*
-{
-  "structuredQuery": {
-    "from": [{ "collectionId": "users" }],
-    "where": {
-      "compositeFilter": {
-        "op": "AND",
-        "filters": [
-          {
-            "compositeFilter": {
-              "op": "OR",
-              "filters": [
-                {
-                  "fieldFilter": {
-                    "field": { "fieldPath": "name" },
-                    "op": "EQUAL",
-                    "value": { "stringValue": "John" }
-                  }
-                },
-                {
-                  "fieldFilter": {
-                    "field": { "fieldPath": "name" },
-                    "op": "EQUAL",
-                    "value": { "stringValue": "Jane" }
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "fieldFilter": {
-              "field": { "fieldPath": "age" },
-              "op": "GREATER_THAN",
-              "value": { "integerValue": 25 }
-            }
-          }
-        ]
-      }
-    }
-  }
-}
-*/

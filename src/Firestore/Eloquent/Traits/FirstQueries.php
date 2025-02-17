@@ -19,7 +19,7 @@ trait FirstQueries
     public function find($id)
     {
         try {
-            return $this->getRequest($this->collection, true, true, $id) ?? null;
+            return $this->getRequest($this->collection, true, true, $id)?->first() ?? null;
         } catch (\Throwable $th) {
             throw new \Exception("Error finding data: " . $th->getMessage());
         }
@@ -28,7 +28,7 @@ trait FirstQueries
     public function findOrFail($id)
     {
         try {
-            return $this->getRequest($this->collection, true, true, $id) ?? throw new \Exception("No data found");
+            return $this->getRequest($this->collection, true, true, $id)?->first() ?? throw new \Exception("No data found");
         } catch (\Throwable $th) {
             throw new \Exception("No data found");
         }

@@ -137,6 +137,25 @@ final class FsFilters
         return $convertedFields;
     }
 
+    public static function isValidDateWithYearMonthDay($dateString)
+    {
+        // This regex looks for patterns like "10 June 2024", "06/10/2024", "2024-06-10", etc.
+        if (!preg_match('/(\b\d{1,2}\b.*\b\d{1,2}\b.*\b\d{4}\b)|(\b\d{4}\b.*\b\d{1,2}\b.*\b\d{1,2}\b)|(\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b.*\b\d{1,2}\b.*\b\d{4}\b)/i', $dateString)) {
+            return false;
+        }
+
+        if (!strtotime($dateString)) {
+            return false;
+        }
+
+        try {
+            $date = Carbon::parse($dateString);
+            return $date->year !== null && $date->month !== null && $date->day !== null;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
     private function convertValue($value)
     {
         if (is_null($value)) {
@@ -149,8 +168,8 @@ final class FsFilters
             return ["doubleValue" => $value];
         } elseif (is_string($value)) {
             // Detect Firestore timestamp format
-            if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/', $value) || strtotime($value)) {
-                return ["timestampValue" => Carbon::parse($value)->toAtomString()];
+            if (FsFilters::isValidDateWithYearMonthDay($value)) {
+                return ["timestampValue" => Carbon::parse($value)->format('Y-m-d\TH:i:s.u\Z')];
             }
             return ["stringValue" => $value];
         } elseif (is_array($value)) {

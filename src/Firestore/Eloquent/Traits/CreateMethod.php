@@ -2,7 +2,9 @@
 
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\Traits;
 
+use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\FsFilters;
 
 trait CreateMethod
 {
@@ -90,8 +92,9 @@ trait CreateMethod
             return ["doubleValue" => $value];
         } elseif (is_string($value)) {
             // Detect Firestore timestamp format
-            if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/', $value) || strtotime($value)) {
-                return ["timestampValue" => $value];
+
+            if (FsFilters::isValidDateWithYearMonthDay($value)) {
+                return ["timestampValue" => Carbon::parse($value)->format('Y-m-d\TH:i:s.u\Z')];
             }
             return ["stringValue" => $value];
         } elseif (is_array($value)) {

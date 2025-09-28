@@ -1,6 +1,9 @@
+
+![Packagist Downloads](https://img.shields.io/packagist/dt/roddy/firestore-eloquent)
+
 <h1 align="center"> Laravel Firestore Eloquent</h1> <br>
 <h1 align="center">
-
+   
 ![Logo](img/logo.png)
 
 </h1> <br>

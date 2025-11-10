@@ -5,11 +5,17 @@ namespace Roddy\FirestoreEloquent\Firestore\Eloquent;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Support\Str;
+use Illuminate\Contracts\Support\Arrayable;
 
 
-final class DataHelperController
+final class DataHelperController implements Arrayable
 {
     public function __construct(private $data, private $convertToFirestoreFormat, private $primaryKey, private $collection, private $patchRequest, private $deleteRequest, private $modelClass) {}
+
+    public function toArray()
+    {
+        return $this->data;
+    }
 
     public function __call($name, $arguments)
     {

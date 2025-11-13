@@ -99,7 +99,7 @@ trait CreateMethod
             return ["stringValue" => $value];
         } elseif (is_array($value)) {
             // Check if it's an indexed array or associative
-            if (array_keys($value) === range(0, count($value) - 1)) {
+            if (array_is_list($value)) {
                 return [
                     "arrayValue" => [
                         "values" => array_map([$this, "convertValue"], $value)

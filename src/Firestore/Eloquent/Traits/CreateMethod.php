@@ -15,7 +15,10 @@ trait CreateMethod
             $filteredData = [];
 
             if (count($this->fillable) > 0) {
-                if (isset($data[$this->primaryKey])) {
+                if (
+                    !in_array($this->primaryKey, $this->fillable) &&
+                    isset($data[$this->primaryKey])
+                ) {
                     unset($data[$this->primaryKey]);
                 }
 
@@ -55,8 +58,13 @@ trait CreateMethod
                 };
 
                 if (count($filteredData) > 0) {
-                    $id = str_replace('-', '', Str::uuid()) . str_replace('.', '', microtime(true));
-                    $filteredData[$this->primaryKey] = $id;
+                    $id = $filteredData[$this->primaryKey] ?? null;
+
+                    if (!$id) {
+                        $id  = str_replace('-', '', Str::uuid()) . str_replace('.', '', microtime(true));
+                        $filteredData[$this->primaryKey] = $id;
+                    }
+
                     $final = $this->convertToFirestoreFormat($filteredData);
                     $this->postRequest($this->collection, $final, true, false, false, '?documentId=' . $id);
                     return $filteredData;

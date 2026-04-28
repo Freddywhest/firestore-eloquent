@@ -27,7 +27,7 @@ trait FHttpClient
     }
   }
 
-  private function postRequest(string $document, array|object $data, bool $use_prefix = true, bool $use_parser = true, bool $is_paginate = false, string $param = null)
+  private function postRequest(string $document, array|object $data, bool $use_prefix = true, bool $use_parser = true, bool $is_paginate = false, ?string $param = null)
   {
     try {
       $array = explode("/", $this->collection);
@@ -67,7 +67,7 @@ trait FHttpClient
     }
   }
 
-  private function patchRequest(string $document, array|object $data, bool $use_prefix = true, bool $use_parser = true, string $id = null)
+  private function patchRequest(string $document, array|object $data, bool $use_prefix = true, bool $use_parser = true, ?string $id = null)
   {
     try {
       $url = $this->FIRESTORE_URL . $this->FIREBASE_PROJECT_ID .
@@ -98,7 +98,7 @@ trait FHttpClient
     }
   }
 
-  private function deleteRequest(string $document, bool $use_prefix = true, bool $use_parser = true, string $id = null)
+  private function deleteRequest(string $document, bool $use_prefix = true, bool $use_parser = true, ?string $id = null)
   {
     try {
       $url = $this->FIRESTORE_URL . $this->FIREBASE_PROJECT_ID . $this->FIRESTORE_URL_DATABASE . ($use_prefix ? '/' : '') . $document . '/' . $id;

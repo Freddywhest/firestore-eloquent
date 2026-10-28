@@ -4,6 +4,17 @@ declare(strict_types=1);
 
 return [
     /*
+     * Unauthenticated production requests are disabled by default. Enable this
+     * only for projects intentionally protected by public Firestore rules.
+     */
+    'allow_unauthenticated' => env('FIREBASE_ALLOW_UNAUTHENTICATED', false),
+
+    /* Firestore emulator host, for example 127.0.0.1:8080. */
+    'emulator_host' => env('FIRESTORE_EMULATOR_HOST'),
+
+    'storage_bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET'),
+
+    /*
      * ------------------------------------------------------------------------
      * Default Firebase project
      * ------------------------------------------------------------------------
@@ -35,6 +46,11 @@ return [
      */
 
     'auth_model' => 'App\\FModels\\User',
+
+    'auth' => [
+        'password_field' => 'password',
+        'remember_token_field' => 'remember_token',
+    ],
 
     /*
     |---------------------------------------------------------------------------
@@ -110,7 +126,15 @@ return [
 
                 'project_id' => env('FIREBASE_PROJECT_ID'),
 
+                /* Use "(default)" unless the project uses a named database. */
+                'database_id' => env('FIREBASE_DATABASE_ID', '(default)'),
+
             ],
         ],
+    ],
+
+    'upload' => [
+        'max_size' => env('FIREBASE_UPLOAD_MAX_SIZE', 10 * 1024 * 1024),
+        'allowed_mime_types' => [],
     ],
 ];

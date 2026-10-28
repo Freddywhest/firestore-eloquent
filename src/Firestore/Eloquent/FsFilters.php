@@ -2,8 +2,6 @@
 
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent;
 
-use Carbon\Carbon;
-
 final class FsFilters
 {
     /**
@@ -38,6 +36,7 @@ final class FsFilters
             '!=' => 'NOT_EQUAL',
             'in' => 'IN',
             'not in' => 'NOT_IN',
+            'not-in' => 'NOT_IN',
             'array-contains' => 'ARRAY_CONTAINS', // Firestore does not support LIKE
             'array-contains-any' => 'ARRAY_CONTAINS_ANY', // Firestore does not support NOT LIKE
         ];
@@ -82,6 +81,15 @@ final class FsFilters
      */
     public function field($fieldPath, $operator, $value)
     {
+        if (array_key_exists('nullValue', $value)) {
+            if ($operator === '=') {
+                return ['unaryFilter' => ['field' => ['fieldPath' => $fieldPath], 'op' => 'IS_NULL']];
+            }
+            if ($operator === '!=') {
+                return ['unaryFilter' => ['field' => ['fieldPath' => $fieldPath], 'op' => 'IS_NOT_NULL']];
+            }
+        }
+
         $filter = [
             'fieldFilter' => [
                 'field' => ["fieldPath" => $fieldPath],
@@ -124,75 +132,6 @@ final class FsFilters
 
     public function convertToFirestoreFormat($data)
     {
-        $convertedFields = [];
-
-        if (is_array($data)) {
-            foreach ($data as $key => $value) {
-                $convertedFields[$key] = $this->convertValue($value);
-            }
-        } else {
-            $convertedFields = $this->convertValue($data);
-        }
-
-        return $convertedFields;
-    }
-
-    public static function isValidDateWithYearMonthDay($dateString)
-    {
-        // This regex looks for patterns like "10 June 2024", "06/10/2024", "2024-06-10", etc.
-        if (!preg_match('/(\b\d{1,2}\b.*\b\d{1,2}\b.*\b\d{4}\b)|(\b\d{4}\b.*\b\d{1,2}\b.*\b\d{1,2}\b)|(\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b.*\b\d{1,2}\b.*\b\d{4}\b)/i', $dateString)) {
-            return false;
-        }
-
-        if (!strtotime($dateString)) {
-            return false;
-        }
-
-        try {
-            $date = Carbon::parse($dateString);
-            return $date->year !== null && $date->month !== null && $date->day !== null;
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
-    private function convertValue($value)
-    {
-        if (is_null($value)) {
-            return ["nullValue" => null];
-        } elseif (is_bool($value)) {
-            return ["booleanValue" => $value];
-        } elseif (is_int($value)) {
-            return ["integerValue" => $value];
-        } elseif (is_float($value)) {
-            return ["doubleValue" => $value];
-        } elseif (is_string($value)) {
-            // Detect Firestore timestamp format
-            if (FsFilters::isValidDateWithYearMonthDay($value)) {
-                return ["timestampValue" => Carbon::parse($value)->format('Y-m-d\TH:i:s.u\Z')];
-            }
-            return ["stringValue" => $value];
-        } elseif (is_array($value)) {
-            // Check if it's an indexed array or associative
-            if (array_keys($value) === range(0, count($value) - 1)) {
-                return [
-                    "arrayValue" => [
-                        "values" => array_map([$this, "convertValue"], $value)
-                    ]
-                ];
-            } else {
-                // Associative array -> mapValue
-                $mapFields = [];
-                foreach ($value as $k => $v) {
-                    $mapFields[$k] = $this->convertValue($v);
-                }
-                return [
-                    "mapValue" => [
-                        "fields" => $mapFields
-                    ]
-                ];
-            }
-        }
-        return null; // Fallback case
+        return FirestoreValue::encode($data);
     }
 }

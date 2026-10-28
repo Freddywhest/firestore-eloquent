@@ -2,46 +2,37 @@
 
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\Traits;
 
-use Carbon\Carbon;
 use Illuminate\Support\Str;
-use Roddy\FirestoreEloquent\Firestore\Eloquent\FsFilters;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreValue;
 
 trait CreateMethod
 {
     public function create(array $data)
     {
         try {
-
             $filteredData = [];
 
-            if (count($this->fillable) > 0) {
+            if ($this->unrestrictedWrites || count($this->fillable) > 0) {
                 if (
+                    !$this->unrestrictedWrites &&
                     !in_array($this->primaryKey, $this->fillable) &&
                     isset($data[$this->primaryKey])
                 ) {
                     unset($data[$this->primaryKey]);
                 }
 
-                if (count($this->default) > 0) {
-                    foreach ($this->default as $k => $v) {
-                        if (!isset($data[$k]) && in_array($k, $this->required) && in_array($k, $this->fillable) && $v) {
-                            $data[$k] = $v;
-                        } else if (isset($data[$k]) && in_array($k, $this->required) && in_array($k, $this->fillable) && !$v) {
-                            $data[$k] = $v;
-                        }
+                foreach ($this->default as $key => $value) {
+                    if (!array_key_exists($key, $data) && in_array($key, $this->fillable, true)) {
+                        $data[$key] = value($value);
                     }
                 }
 
                 foreach ($data as $key => $value) {
-                    if (count($this->fieldTypes) > 0) {
-                        if (isset($this->fieldTypes[$key])) {
-                            if ($this->checkTypeInCreate($value) !== $this->fieldTypes[$key]) {
-                                throw new \Exception('"' . $key . '" expect type ' . $this->fieldTypes[$key] . ' but got ' . $this->checkTypeInCreate($value) . '.', 1);
-                            }
-                        }
+                    if (isset($this->fieldTypes[$key])) {
+                        $this->assertFieldType($key, $value, $this->fieldTypes[$key]);
                     }
-                    if (in_array($key, $this->fillable)) {
-                        if (in_array($key, $this->required) && !$value) {
+                    if ($this->unrestrictedWrites || in_array($key, $this->fillable, true)) {
+                        if (in_array($key, $this->required, true) && $this->isMissingRequiredValue($value)) {
                             return throw new \Exception('"' . $key . '" is required.', 1);
                         }
 
@@ -51,7 +42,7 @@ trait CreateMethod
 
                 if (count($this->required) > 0) {
                     foreach ($this->required as $value) {
-                        if (!isset($filteredData[$value])) {
+                        if (!array_key_exists($value, $filteredData) || $this->isMissingRequiredValue($filteredData[$value])) {
                             return throw new \Exception('"' . $value . '" is required.', 1);
                         }
                     }
@@ -66,9 +57,21 @@ trait CreateMethod
                     }
 
                     $final = $this->convertToFirestoreFormat($filteredData);
-                    $this->postRequest($this->collection, $final, true, false, false, '?documentId=' . $id);
+                    if ($this->transactionContext !== null) {
+                        $this->transactionContext->queueWrite([
+                            'update' => array_merge(
+                                ['name' => $this->firestoreDocumentName($id)],
+                                $final
+                            ),
+                            'currentDocument' => ['exists' => false],
+                        ]);
+                    } else {
+                        $this->postRequest($this->collection, $final, true, false, false, '?documentId=' . rawurlencode((string) $id));
+                    }
                     return $filteredData;
                 }
+
+                throw new \InvalidArgumentException('No fillable fields were provided.');
             } else {
                 return throw new \Exception('Cannot create a new "' . $this->model . '" because fillable property in "' . $this->model . '" model is empty or undefined.', 1);
             }
@@ -77,55 +80,75 @@ trait CreateMethod
         }
     }
 
+    /** Laravel query-builder style insert. */
+    public function insert(array $values): bool
+    {
+        if ($values === []) {
+            return false;
+        }
+
+        $documents = array_is_list($values) ? $values : [$values];
+        foreach ($documents as $index => $document) {
+            if (!is_array($document)) {
+                throw new \InvalidArgumentException("Insert item [{$index}] must be an array.");
+            }
+            $this->create($document);
+        }
+
+        return true;
+    }
+
+    /** Insert one document and return its primary-key value. */
+    public function insertGetId(array $values, ?string $sequence = null): string|int
+    {
+        $created = $this->create($values);
+        $key = $sequence ?? $this->primaryKey;
+
+        if (!array_key_exists($key, $created) || (!is_string($created[$key]) && !is_int($created[$key]))) {
+            throw new \RuntimeException("The inserted document did not contain primary key [{$key}].");
+        }
+
+        return $created[$key];
+    }
+
     private function convertToFirestoreFormat($data)
     {
         $convertedFields = [];
 
         foreach ($data as $key => $value) {
-            $convertedFields[$key] = $this->convertValue($value);
+            if (isset($this->fieldTypes[$key])) {
+                $this->assertFieldType($key, $value, $this->fieldTypes[$key]);
+            }
+            $convertedFields[$key] = FirestoreValue::encode($value, $this->fieldTypes[$key] ?? null);
         }
 
         return ["fields" => $convertedFields];
     }
 
-    private function convertValue($value)
+    private function isMissingRequiredValue(mixed $value): bool
     {
-        if (is_null($value)) {
-            return ["nullValue" => null];
-        } elseif (is_bool($value)) {
-            return ["booleanValue" => $value];
-        } elseif (is_int($value)) {
-            return ["integerValue" => $value];
-        } elseif (is_float($value)) {
-            return ["doubleValue" => $value];
-        } elseif (is_string($value)) {
-            // Detect Firestore timestamp format
+        return $value === null || (is_string($value) && trim($value) === '');
+    }
 
-            if (FsFilters::isValidDateWithYearMonthDay($value)) {
-                return ["timestampValue" => Carbon::parse($value)->format('Y-m-d\TH:i:s.u\Z')];
-            }
-            return ["stringValue" => $value];
-        } elseif (is_array($value)) {
-            // Check if it's an indexed array or associative
-            if (array_is_list($value)) {
-                return [
-                    "arrayValue" => [
-                        "values" => array_map([$this, "convertValue"], $value)
-                    ]
-                ];
-            } else {
-                // Associative array -> mapValue
-                $mapFields = [];
-                foreach ($value as $k => $v) {
-                    $mapFields[$k] = $this->convertValue($v);
-                }
-                return [
-                    "mapValue" => [
-                        "fields" => $mapFields
-                    ]
-                ];
-            }
+    private function assertFieldType(string $field, mixed $value, string $type): void
+    {
+        $valid = match (strtolower($type)) {
+            'int', 'integer' => is_int($value),
+            'float', 'double' => is_float($value),
+            'numeric', 'number' => is_int($value) || is_float($value),
+            'string' => is_string($value),
+            'bool', 'boolean' => is_bool($value),
+            'array', 'list' => is_array($value) && array_is_list($value),
+            'object', 'map' => is_object($value) || (is_array($value) && !array_is_list($value)),
+            'date', 'datetime', 'timestamp' => $value instanceof \DateTimeInterface || (is_string($value) && strtotime($value) !== false),
+            'null' => $value === null,
+            default => throw new \InvalidArgumentException("Unsupported field type [{$type}] for [{$field}]."),
+        };
+
+        if (!$valid) {
+            throw new \InvalidArgumentException(
+                '"' . $field . '" expects type ' . $type . ' but got ' . get_debug_type($value) . '.'
+            );
         }
-        return null; // Fallback case
     }
 }

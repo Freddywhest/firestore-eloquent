@@ -3,7 +3,7 @@
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\Traits;
 
 use Roddy\FirestoreEloquent\Firestore\Eloquent\FsFilters;
-use Carbon\Carbon;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreValue;
 
 trait WhereQueries
 {
@@ -11,8 +11,8 @@ trait WhereQueries
 
     public function whereIn($field, array $value)
     {
-        if (!is_array($value)) {
-            return throw new \Exception('Invalid value. WhereIn value should be an array but got ' . gettype($value) . '.', 1);
+        if ($value === [] || count($value) > 30) {
+            throw new \InvalidArgumentException('WhereIn expects between 1 and 30 values.');
         }
 
         if ($this->whereContains || $this->whereContainsAny || $this->whereNotIn || $this->whereDate || $this->where || $this->whereIn) {
@@ -26,10 +26,10 @@ trait WhereQueries
         return $this;
     }
 
-    public function whereContains($field, string|int|float $value)
+    public function whereContains($field, mixed $value)
     {
-        if (!is_string($value) && !is_int($value) && !is_float($value)) {
-            return throw new \Exception('Invalid value. WhereContains value should be a string, integer or float but got ' . gettype($value) . '.', 1);
+        if (is_array($value) && array_is_list($value)) {
+            throw new \InvalidArgumentException('WhereContains cannot compare a nested Firestore array.');
         }
 
         if ($this->whereIn || $this->whereContainsAny || $this->whereNotIn || $this->whereDate || $this->where || $this->whereContains) {
@@ -45,8 +45,8 @@ trait WhereQueries
 
     public function whereContainsAny($field, array $value)
     {
-        if (!is_array($value)) {
-            return throw new \Exception('Invalid value. WhereContainsAny value should be an array but got ' . gettype($value) . '.', 1);
+        if ($value === [] || count($value) > 30) {
+            throw new \InvalidArgumentException('WhereContainsAny expects between 1 and 30 values.');
         }
 
         if ($this->whereIn || $this->whereContainsAny || $this->whereNotIn || $this->whereDate || $this->where || $this->whereContains) {
@@ -62,8 +62,8 @@ trait WhereQueries
 
     public function whereNotIn($field, array $value)
     {
-        if (!is_array($value)) {
-            return throw new \Exception('Invalid value. WhereNotIn value should be an array but got ' . gettype($value) . '.', 1);
+        if ($value === [] || count($value) > 10) {
+            throw new \InvalidArgumentException('WhereNotIn expects between 1 and 10 values.');
         }
 
         if ($this->whereIn || $this->whereContainsAny || $this->whereNotIn || $this->whereDate || $this->where || $this->whereContains) {
@@ -93,27 +93,26 @@ trait WhereQueries
             return false;
         }
 
-        foreach ($array as $item) {
-            if (empty($item) && !is_bool($item)) {
+        $tuples = $this->isNestedArray($array) ? $array : [$array];
+        foreach ($tuples as $tuple) {
+            if (!is_array($tuple) || !in_array(count($tuple), [2, 3], true)) {
                 return false;
             }
-            if (is_array($item)) {
-                foreach ($item as $subItem) {
-                    if (empty($subItem) && !is_bool($subItem)) {
-                        return false;
-                    }
-                    if (is_array($subItem)) {
-                        return false;
-                    }
-                }
+            if (!isset($tuple[0]) || !is_string($tuple[0]) || trim($tuple[0]) === '') {
+                return false;
             }
         }
 
         return true;
     }
 
-    public function whereDate(array $filters, bool $or = false)
+    public function whereDate(array|string $filters, mixed $operator = null, mixed $value = null)
     {
+        $or = is_array($filters) && is_bool($operator) ? $operator : false;
+        if (is_string($filters)) {
+            $filters = $this->normalizeWhereArguments($filters, $operator, $value, func_num_args());
+        }
+
         if (!$this->isValidNestedArray($filters)) {
             throw new \Exception('Invalid value. WhereDate value should be an array or a nested array like [[], [], []] or [] and not empty but got type: ' . gettype($filters) . ' and value: ' . json_encode($filters) . '.', 1);
         }
@@ -127,7 +126,7 @@ trait WhereQueries
         if ($this->isNestedArray($filters)) {
             $d = [];
             foreach ($filters as $filter) {
-                if (count(array_keys($filter)) === 3) {
+                if (count($filter) === 3) {
                     [$field, $operator, $value] = $filter;
                 } else if (count(array_keys($filter)) === 2) {
                     [$field, $value] = $filter;
@@ -138,19 +137,19 @@ trait WhereQueries
                     throw new \Exception("Invalid operator: " . $operator);
                 }
 
-                if (!strtotime($value)) {
+                if (!is_string($value) || strtotime($value) === false) {
                     throw new \Exception('Invalid value. WhereDate value should be a valid date but got ' . $value . '.', 1);
                 }
 
                 $s = new FsFilters();
-                $formattedDate = $s->convertToFirestoreFormat($value);
+                $formattedDate = FirestoreValue::encode($value, 'timestamp');
                 $filter = $s->field($field, $operator, $formattedDate);
                 $d[] = $filter;
             }
 
             $this->whereDate = $s->compositeFilter($or ? 'OR' : 'AND', $d);
         } else {
-            if (count(array_keys($filters)) === 3) {
+            if (count($filters) === 3) {
                 [$field, $operator, $value] = $filters;
             } else if (count(array_keys($filters)) === 2) {
                 [$field, $value] = $filters;
@@ -163,12 +162,12 @@ trait WhereQueries
                 throw new \Exception("Invalid operator: " . $operator);
             }
 
-            if (!strtotime($value)) {
+            if (!is_string($value) || strtotime($value) === false) {
                 throw new \Exception('Invalid value. WhereDate value should be a valid date but got ' . $value . '.', 1);
             }
 
             $s = new FsFilters();
-            $formattedDate = $s->convertToFirestoreFormat($value);
+            $formattedDate = FirestoreValue::encode($value, 'timestamp');
             $filter = $s->field($field, $operator, $formattedDate);
 
             $this->whereDate = $filter;
@@ -178,8 +177,12 @@ trait WhereQueries
     }
 
 
-    public function where(array $filters)
+    public function where(array|string $filters, mixed $operator = null, mixed $value = null)
     {
+        if (is_string($filters)) {
+            $filters = $this->normalizeWhereArguments($filters, $operator, $value, func_num_args());
+        }
+
         if (!$this->isValidNestedArray($filters)) {
             throw new \Exception('Invalid value. Where value should be an array or a nested array like [[], [], []] or [] and not empty but got type: ' . gettype($filters) . ' and value: ' . json_encode($filters) . '.', 1);
         }
@@ -193,7 +196,7 @@ trait WhereQueries
         if ($this->isNestedArray($filters)) {
             $d = [];
             foreach ($filters as $filter) {
-                if (count(array_keys($filter)) === 3) {
+                if (count($filter) === 3) {
                     [$field, $operator, $value] = $filter;
                 } else if (count(array_keys($filter)) === 2) {
                     [$field, $value] = $filter;
@@ -212,7 +215,7 @@ trait WhereQueries
 
             $this->where = $s->compositeFilter('AND', $d);
         } else {
-            if (count(array_keys($filters)) === 3) {
+            if (count($filters) === 3) {
                 [$field, $operator, $value] = $filters;
             } else if (count(array_keys($filters)) === 2) {
                 [$field, $value] = $filters;
@@ -235,8 +238,13 @@ trait WhereQueries
     }
 
 
-    public function orWhere(array $filters, bool $or = false)
+    public function orWhere(array|string $filters, mixed $operator = null, mixed $value = null)
     {
+        $or = is_array($filters) && is_bool($operator) ? $operator : false;
+        if (is_string($filters)) {
+            $filters = $this->normalizeWhereArguments($filters, $operator, $value, func_num_args());
+        }
+
         if (!$this->isValidNestedArray($filters)) {
             throw new \Exception('Invalid value. OrWhere value should be an array or a nested array like [[], [], []] or [] and not empty but got type: ' . gettype($filters) . ' and value: ' . json_encode($filters) . '.', 1);
         }
@@ -250,7 +258,7 @@ trait WhereQueries
         if ($this->isNestedArray($filters)) {
             $d = [];
             foreach ($filters as $filter) {
-                if (count(array_keys($filter)) === 3) {
+                if (count($filter) === 3) {
                     [$field, $operator, $value] = $filter;
                 } else if (count(array_keys($filter)) === 2) {
                     [$field, $value] = $filter;
@@ -269,7 +277,7 @@ trait WhereQueries
 
             $this->orWhere = $s->compositeFilter($or ? 'OR' : 'AND', $d);
         } else {
-            if (count(array_keys($filters)) === 3) {
+            if (count($filters) === 3) {
                 [$field, $operator, $value] = $filters;
             } else if (count(array_keys($filters)) === 2) {
                 [$field, $value] = $filters;
@@ -317,5 +325,20 @@ trait WhereQueries
 
         // Return the first non-empty condition, or an empty array if none exist
         return $conditions ? reset($conditions) : [];
+    }
+
+    private function normalizeWhereArguments(string $field, mixed $operator, mixed $value, int $argumentCount): array
+    {
+        if (trim($field) === '') {
+            throw new \InvalidArgumentException('The Firestore filter field cannot be empty.');
+        }
+
+        return match ($argumentCount) {
+            2 => [$field, '=', $operator],
+            3 => [$field, $operator, $value],
+            default => throw new \InvalidArgumentException(
+                'A string filter expects where($field, $value) or where($field, $operator, $value).'
+            ),
+        };
     }
 }

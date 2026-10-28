@@ -28,8 +28,11 @@ trait AggregationQueries
         $query = $this->getQuery(isAggregation: true);
         $data = ["structuredAggregationQuery" => ["aggregations" => [["alias" => "sum", "sum" => (object) ["field" => (object) ["fieldPath" => $field]]]], "structuredQuery" => $query["structuredQuery"]]];
         $result = $this->postRequest(':runAggregationQuery', $data, false, false)?->first() ?? null;
-        $final =  isset($result['result']) ? $result['result']['aggregateFields']['sum']['integerValue'] ?? 0 : 0;
-        return (int) $final;
+        $value = $result['result']['aggregateFields']['sum'] ?? [];
+        if (array_key_exists('doubleValue', $value)) {
+            return (float) $value['doubleValue'];
+        }
+        return (int) ($value['integerValue'] ?? 0);
     }
 
     public function avg($field)

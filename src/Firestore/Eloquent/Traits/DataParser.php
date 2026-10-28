@@ -3,30 +3,16 @@
 namespace Roddy\FirestoreEloquent\Firestore\Eloquent\Traits;
 
 use Roddy\FirestoreEloquent\Firestore\Eloquent\DataHelperController;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\FirestoreValue;
 
 trait DataParser
 {
     private function parseFirestoreJson($json)
     {
-        $extractValue = function ($value) use (&$extractValue, &$parseFields) {
-            if (isset($value['stringValue'])) return $value['stringValue'];
-            if (isset($value['booleanValue'])) return $value['booleanValue'];
-            if (isset($value['integerValue'])) return (int) $value['integerValue'];
-            if (isset($value['doubleValue'])) return (float) $value['doubleValue'];
-            if (isset($value['timestampValue'])) return $value['timestampValue'];
-            if (isset($value['mapValue']['fields'])) return $parseFields($value['mapValue']['fields'], $extractValue);
-            if (isset($value['arrayValue']['values'])) {
-                return array_map(function ($item) use ($extractValue) {
-                    return $extractValue($item);
-                }, $value['arrayValue']['values']);
-            }
-            return null;
-        };
-
-        $parseFields = function ($fields, $extractValue) {
+        $parseFields = function ($fields) {
             $parsed = [];
             foreach ($fields as $key => $value) {
-                $parsed[$key] = $extractValue($value);
+                $parsed[$key] = FirestoreValue::decode($value);
             }
             return $parsed;
         };
@@ -37,31 +23,75 @@ trait DataParser
         $convertFunction  = function ($data) {
             return $this->convertToFirestoreFormat($data);
         };
-        $patchRequestFuntion = function ($data, $id) {
-            return $this->patchRequest($this->collection, $data, true, false, $id);
+        $patchRequestFuntion = function ($data, $id, array $fieldPaths) {
+            if ($this->transactionContext !== null) {
+                $this->transactionContext->queueWrite([
+                    'update' => array_merge(
+                        ['name' => $this->firestoreDocumentName($id)],
+                        $data
+                    ),
+                    'updateMask' => [
+                        'fieldPaths' => array_map(
+                            fn (string $field): string => $this->firestoreFieldPath($field),
+                            $fieldPaths
+                        ),
+                    ],
+                    'currentDocument' => ['exists' => true],
+                ]);
+
+                return null;
+            }
+            return $this->patchRequest($this->collection, $data, true, false, $id, $fieldPaths);
         };
 
         $deleteRequestFuntion = function ($id) {
+            if ($this->transactionContext !== null) {
+                $this->transactionContext->queueWrite([
+                    'delete' => $this->firestoreDocumentName($id),
+                ]);
+
+                return null;
+            }
             return $this->deleteRequest($this->collection, true, false, $id);
         };
         if (isset($data['documents'])) {
             foreach ($data['documents'] as $doc) {
-                $data = $parseFields($doc['fields'], $extractValue);
-                if ($this->hidden) {
-                    $data = array_diff_key($data, array_flip($this->hidden));
-                }
-                $result[] = new DataHelperController($data, $convertFunction, $this->primaryKey, $this->collection, $patchRequestFuntion, $deleteRequestFuntion, $this->modelClass);
+                $result[] = $this->newDataHelper($doc, $parseFields, $convertFunction, $patchRequestFuntion, $deleteRequestFuntion);
             }
-        } elseif (isset($data[0]['document'])) {
+        } elseif (is_array($data)) {
             foreach ($data as $doc) {
-                $data = $parseFields($doc['document']['fields'], $extractValue);
-                if ($this->hidden) {
-                    $data = array_diff_key($data, array_flip($this->hidden));
+                if (!isset($doc['document'])) {
+                    continue;
                 }
-                $result[] = new DataHelperController($data, $convertFunction, $this->primaryKey, $this->collection, $patchRequestFuntion, $deleteRequestFuntion, $this->modelClass);
+                $result[] = $this->newDataHelper($doc['document'], $parseFields, $convertFunction, $patchRequestFuntion, $deleteRequestFuntion);
             }
         }
 
         return $result;
+    }
+
+    private function newDataHelper(array $document, callable $parseFields, callable $convertFunction, callable $patchRequestFunction, callable $deleteRequestFunction): DataHelperController
+    {
+        $data = $parseFields($document['fields'] ?? []);
+        $documentName = $document['name'] ?? null;
+
+        if (!array_key_exists($this->primaryKey, $data) && $documentName) {
+            $data[$this->primaryKey] = rawurldecode(basename($documentName));
+        }
+
+        return new DataHelperController(
+            data: $data,
+            convertToFirestoreFormat: $convertFunction,
+            primaryKey: $this->primaryKey,
+            collection: $this->collection,
+            patchRequest: $patchRequestFunction,
+            deleteRequest: $deleteRequestFunction,
+            modelClass: $this->modelClass,
+            fillable: $this->fillable,
+            fieldTypes: $this->fieldTypes,
+            hidden: $this->hidden,
+            documentName: $documentName,
+            unrestrictedWrites: $this->unrestrictedWrites
+        );
     }
 }

@@ -7,30 +7,24 @@ trait FirstQueries
     public function first()
     {
         $query = $this->getQuery(1);
-        return $this->postRequest(':runQuery', $query, false)?->first() ?? null;
+        $models = $this->postRequest(':runQuery', $query, false)?->all() ?? [];
+        return $this->eagerLoadRelations($models)[0] ?? null;
     }
 
     public function firstOrFail()
     {
-        $query = $this->getQuery(1);
-        return $this->postRequest(':runQuery', $query, false)?->first() ?? throw new \Exception("No data found");
+        return $this->first() ?? throw new \Exception("No data found");
     }
 
     public function find($id)
     {
-        try {
-            return $this->getRequest($this->collection, true, true, $id)?->first() ?? null;
-        } catch (\Throwable $th) {
-            throw new \Exception("Error finding data: " . $th->getMessage());
-        }
+        $model = $this->getRequest($this->collection, true, true, $id)?->first() ?? null;
+
+        return $model ? $this->eagerLoadRelations([$model])[0] : null;
     }
 
     public function findOrFail($id)
     {
-        try {
-            return $this->getRequest($this->collection, true, true, $id)?->first() ?? throw new \Exception("No data found");
-        } catch (\Throwable $th) {
-            throw new \Exception("No data found");
-        }
+        return $this->find($id) ?? throw new \Exception("No data found");
     }
 }

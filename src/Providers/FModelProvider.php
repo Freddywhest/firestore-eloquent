@@ -4,7 +4,9 @@ namespace Roddy\FirestoreEloquent\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Roddy\FirestoreEloquent\Auth\FirestoreUserProvider;
 use Roddy\FirestoreEloquent\Console\Commands\MakeModel;
+use Roddy\FirestoreEloquent\Firestore\FirestoreManager;
 
 class FModelProvider extends ServiceProvider
 {
@@ -13,10 +15,12 @@ class FModelProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot(\Illuminate\Routing\Router  $router, \Illuminate\Foundation\Http\Kernel $kernel)
+    public function boot(): void
     {
-        app('router')->aliasMiddleware('f.auth', \Roddy\FirestoreEloquent\Middleware\F_Authentication::class);
-        app('router')->aliasMiddleware('f.guest', \Roddy\FirestoreEloquent\Middleware\F_RedirectIfAuthenticated::class);
+        if ($this->app->bound('router')) {
+            $this->app->make('router')->aliasMiddleware('f.auth', \Roddy\FirestoreEloquent\Middleware\F_Authentication::class);
+            $this->app->make('router')->aliasMiddleware('f.guest', \Roddy\FirestoreEloquent\Middleware\F_RedirectIfAuthenticated::class);
+        }
 
         $this->publishes([
             __DIR__ . '/../config/firebase.php' => config_path('firebase.php'),
@@ -54,11 +58,26 @@ class FModelProvider extends ServiceProvider
             return new \Roddy\FirestoreEloquent\Auth\FAuth();
         });
 
+        $this->app->scoped('firestore', function () {
+            return new FirestoreManager();
+        });
+
+        // Enables `driver => firestore` in the application's auth.php provider.
+        $this->app->resolving('auth', function ($auth, $app): void {
+            $auth->provider('firestore', function ($app, array $config): FirestoreUserProvider {
+                return new FirestoreUserProvider(
+                    hasher: $app->make('hash'),
+                    model: $config['model'] ?? config('firebase.auth_model'),
+                    passwordField: $config['password_field'] ?? config('firebase.auth.password_field', 'password')
+                );
+            });
+        });
+
         // Bind 'fmodel' to the service container to create a singleton instance of FModel
         // This allows accessing the FModel class through the service container or facade
         // The binding is used to resolve dependencies and create new instances when needed
         $this->app->bind('fmodel', function () {
-            return $this->app->make('\Roddy\FirestoreEloquent\Firestore\Eloquent\FModel');
+            return $this->app->make(\Roddy\FirestoreEloquent\Facade\FModel::class);
         });
     }
 }

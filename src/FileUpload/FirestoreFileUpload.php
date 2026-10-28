@@ -1,108 +1,114 @@
 <?php
+
 namespace Roddy\FirestoreEloquent\FileUpload;
 
-use Illuminate\Http\UploadedFile;
 use Google\Cloud\Storage\StorageClient;
-
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
+use RuntimeException;
 
 class FirestoreFileUpload
 {
-    public static function upload(string $name, $path = 'images')
+    public static function upload(string $name, string $path = 'images'): object
     {
-        if(!env('GOOGLE_CLOUD_STORAGE_BUCKET')){
-            return throw new \Exception('Please set GOOGLE_CLOUD_STORAGE_BUCKET in your .env file');
+        if (!request()->hasFile($name)) {
+            throw new InvalidArgumentException("No uploaded file was found for [{$name}].");
         }
 
-        if(!env('GOOGLE_APPLICATION_CREDENTIALS')){
-            return throw new \Exception('Please set GOOGLE_APPLICATION_CREDENTIALS in your .env file');
-        }
-
-        if(request()->hasFile($name)){
-            $file = UploadedFile::createFromBase(request()->file($name));
-
-            $storage = new StorageClient([
-                'keyFilePath' => base_path().'/'.env('GOOGLE_APPLICATION_CREDENTIALS'),
-            ]);
-
-            $bucket = $storage->bucket(env('GOOGLE_CLOUD_STORAGE_BUCKET'));
-
-             // Upload the file to Google Cloud Storage
-            $objectName = $path ? $path.'/'. time().'-'.$file->getClientOriginalName() :  time().'-'.$file->getClientOriginalName();
-            $bucket->upload(
-                $file->get(),
-                ['name' => $objectName]
-            );
-
-            // Get the public URL of the uploaded file
-            $url = 'https://firebasestorage.googleapis.com/v0/b/' . env('GOOGLE_CLOUD_STORAGE_BUCKET') . '/o/' . urlencode($objectName);
-
-            $payload = file_get_contents($url);
-
-            return (object) [
-                'url' => $url.'?alt=media',
-                'downloadUrl' => $url.'?alt=media&token='.json_decode($payload)->downloadTokens,
-                'contentType' => json_decode($payload)->contentType,
-                'downloadTokens' => json_decode($payload)->downloadTokens,
-                'size' => json_decode($payload)->size,
-                'updated' => json_decode($payload)->updated,
-                'timeCreated' => json_decode($payload)->timeCreated,
-                'bucket' => json_decode($payload)->bucket,
-                'etag' => json_decode($payload)->etag,
-                'generation' => json_decode($payload)->generation,
-                'nameAndPath' => json_decode($payload)->name,
-            ];
-        }else{
-            $trace = debug_backtrace();
-            trigger_error('Invalid file name provided ["'.$name.'"] or no file was uploaded with the name provided in the request object.'.
-            ' Trace => File : '. $trace[0]['file'] . ', Line : '. $trace[0]['line'], E_USER_ERROR);
-        }
+        return self::store(UploadedFile::createFromBase(request()->file($name)), $path);
     }
 
-    public static function uploadLivewire(object $file, $path = 'images')
+    public static function uploadLivewire(object $file, string $path = 'images'): object
     {
-        if(!env('GOOGLE_CLOUD_STORAGE_BUCKET')){
-            return throw new \Exception('Please set GOOGLE_CLOUD_STORAGE_BUCKET in your .env file');
+        if (!method_exists($file, 'getRealPath') || !is_file($file->getRealPath())) {
+            throw new InvalidArgumentException('The supplied upload is missing or invalid.');
         }
 
-        if(!env('GOOGLE_APPLICATION_CREDENTIALS')){
-            return throw new \Exception('Please set GOOGLE_APPLICATION_CREDENTIALS in your .env file');
+        return self::store($file, $path);
+    }
+
+    private static function store(object $file, string $path): object
+    {
+        $bucketName = config('firebase.storage_bucket');
+        $credentials = config(
+            'firebase.projects.' . config('firebase.default', 'app') . '.credentials',
+            null
+        );
+
+        if (!$bucketName) {
+            throw new RuntimeException('GOOGLE_CLOUD_STORAGE_BUCKET is not configured.');
+        }
+        if (!$credentials) {
+            throw new RuntimeException('Firebase/Google application credentials are not configured.');
         }
 
-        if(file_exists($file->getRealPath())){
-            $storage = new StorageClient([
-                'keyFilePath' => base_path().'/'.env('GOOGLE_APPLICATION_CREDENTIALS'),
+        $size = (int) $file->getSize();
+        $maxSize = (int) config('firebase.upload.max_size', 10 * 1024 * 1024);
+        if ($size < 1 || $size > $maxSize) {
+            throw new InvalidArgumentException("Upload size must be between 1 and {$maxSize} bytes.");
+        }
+
+        $mimeType = (string) $file->getMimeType();
+        $allowedMimeTypes = (array) config('firebase.upload.allowed_mime_types', []);
+        if ($allowedMimeTypes !== [] && !in_array($mimeType, $allowedMimeTypes, true)) {
+            throw new InvalidArgumentException("Uploads with MIME type [{$mimeType}] are not allowed.");
+        }
+
+        $safePath = trim(implode('/', array_filter(array_map(
+            fn (string $segment) => Str::slug($segment),
+            explode('/', str_replace('\\', '/', $path))
+        ))), '/');
+        $originalBase = pathinfo((string) $file->getClientOriginalName(), PATHINFO_FILENAME);
+        $extension = strtolower((string) $file->getClientOriginalExtension());
+        $extension = preg_replace('/[^a-z0-9]/', '', $extension) ?: '';
+        $filename = Str::uuid() . '-' . (Str::slug($originalBase) ?: 'upload') . ($extension ? '.' . $extension : '');
+        $objectName = $safePath ? $safePath . '/' . $filename : $filename;
+        $downloadToken = (string) Str::uuid();
+
+        $storage = new StorageClient(['keyFilePath' => self::absolutePath($credentials)]);
+        $stream = fopen($file->getRealPath(), 'rb');
+        if ($stream === false) {
+            throw new RuntimeException('Unable to open the uploaded file.');
+        }
+
+        try {
+            $object = $storage->bucket($bucketName)->upload($stream, [
+                'name' => $objectName,
+                'metadata' => [
+                    'contentType' => $mimeType,
+                    'metadata' => ['firebaseStorageDownloadTokens' => $downloadToken],
+                ],
             ]);
-
-            $bucket = $storage->bucket(env('GOOGLE_CLOUD_STORAGE_BUCKET'));
-
-             // Upload the file to Google Cloud Storage
-            $objectName = $path ? $path.'/'. time().'-'.$file->getClientOriginalName() :  time().'-'.$file->getClientOriginalName();
-            $bucket->upload(
-                $file->get(),
-                ['name' => $objectName]
-            );
-
-            // Get the public URL of the uploaded file
-            $url = 'https://firebasestorage.googleapis.com/v0/b/' . env('GOOGLE_CLOUD_STORAGE_BUCKET') . '/o/' . urlencode($objectName);
-
-            $payload = file_get_contents($url);
-
-            return (object) [
-                'url' => $url.'?alt=media',
-                'downloadUrl' => $url.'?alt=media&token='.json_decode($payload)->downloadTokens,
-                'contentType' => json_decode($payload)->contentType,
-                'downloadTokens' => json_decode($payload)->downloadTokens,
-                'size' => json_decode($payload)->size,
-                'updated' => json_decode($payload)->updated,
-                'timeCreated' => json_decode($payload)->timeCreated,
-                'bucket' => json_decode($payload)->bucket,
-                'etag' => json_decode($payload)->etag,
-                'generation' => json_decode($payload)->generation,
-                'nameAndPath' => json_decode($payload)->name,
-            ];
-        }else{
-            $trace = debug_backtrace();
-            trigger_error('Attempted to upload a file that does not exist or an empty file. Trace => File : '. $trace[0]['file'] . ', Line : '. $trace[0]['line'], E_USER_ERROR);
+        } finally {
+            fclose($stream);
         }
+
+        $info = $object->info();
+        $url = 'https://firebasestorage.googleapis.com/v0/b/' . rawurlencode($bucketName)
+            . '/o/' . rawurlencode($objectName);
+
+        return (object) [
+            'url' => $url . '?alt=media',
+            'downloadUrl' => $url . '?alt=media&token=' . rawurlencode($downloadToken),
+            'contentType' => $info['contentType'] ?? $mimeType,
+            'downloadTokens' => $downloadToken,
+            'size' => $info['size'] ?? $size,
+            'updated' => $info['updated'] ?? null,
+            'timeCreated' => $info['timeCreated'] ?? null,
+            'bucket' => $info['bucket'] ?? $bucketName,
+            'etag' => $info['etag'] ?? null,
+            'generation' => $info['generation'] ?? null,
+            'nameAndPath' => $info['name'] ?? $objectName,
+        ];
+    }
+
+    private static function absolutePath(string $path): string
+    {
+        if (str_starts_with($path, DIRECTORY_SEPARATOR) || preg_match('/^[A-Za-z]:[\\\\\/]/', $path)) {
+            return $path;
+        }
+
+        return base_path($path);
     }
 }

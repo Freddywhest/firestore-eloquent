@@ -3,18 +3,30 @@
 namespace Roddy\FirestoreEloquent\Facade;
 
 use Roddy\FirestoreEloquent\Firestore\Eloquent\FClient;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\Traits\HasStaticQueries;
+use Roddy\FirestoreEloquent\Firestore\Eloquent\Traits\FRelations;
 
+/**
+ * Base Firestore model.
+ *
+ * The query API is dispatched through __callStatic(). These declarations are
+ * intentionally kept here so Intelephense and other PHP language servers can
+ * autocomplete the inherited API on application models such as Ride.
+ *
+ * @property-read string $collection
+ * @property-read string $model
+ * @property-read string $primaryKey
+ * @property-read array<int, string> $fillable
+ * @property-read array<int, string> $required
+ * @property-read array<string, mixed> $default
+ * @property-read array<string, string> $fieldTypes
+ * @property-read array<int, string> $hidden
+ *
+ * @mixin FClient
+ */
 class FModel
 {
-    /**
-     * @property string $collection
-     * @property mixed $model
-     * @property string $primaryKey
-     * @property array $fillable
-     * @property array $required
-     * @property array $default
-     * @property array $fieldTypes
-     */
+    use FRelations, HasStaticQueries;
 
     protected $collection;
     private $model;
@@ -31,7 +43,8 @@ class FModel
          * Check if FIREBASE_PROJECT_ID is set in .env file or config file.
          * If not set, throw an exception.
          */
-        if (!config('firebase.projects.app.project_id', env('FIREBASE_PROJECT_ID'))) {
+        $project = config('firebase.default', 'app');
+        if (!config("firebase.projects.{$project}.database.project_id")) {
             throw new \Exception("FIREBASE_PROJECT_ID not set in .env file.");
         }
 
@@ -62,17 +75,7 @@ class FModel
     public static function __callStatic($name, $arguments)
     {
         try {
-            return (new FClient(
-                collection: (new static)->collection,
-                model: (new static)->model,
-                primaryKey: (new static)->primaryKey,
-                fillable: (new static)->fillable,
-                required: (new static)->required,
-                default: (new static)->default,
-                fieldTypes: (new static)->fieldTypes,
-                hidden: (new static)->hidden,
-                modelClass: get_called_class()
-            ))->$name(...$arguments);
+            return static::query()->$name(...$arguments);
         } catch (\Throwable $th) {
             throw new \Exception('Error: ' . $th->getMessage() . ". From " . static::class . "::" . $name . "().", 1);
         }

@@ -63,16 +63,21 @@ class FAuth
         new self();
         $className = self::$className;
 
+        if (!isset($args['email'], $args['password'])) {
+            return false;
+        }
+
         ["email" => $email, "password" => $password] = $args;
         $user = $className::where(['email', '=', $email])->first();
 
-        if (!$user->exists()) {
+        if (!$user) {
             return false;
         }
 
-        if (!Hash::check($password, $user->password)) {
+        if (!is_string($user->password) || !Hash::check($password, $user->password)) {
             return false;
         }
+        request()->session()->regenerate();
         Session::put('authUserId', $user->{(new $className)->primaryKey});
         return true;
     }
@@ -87,12 +92,15 @@ class FAuth
         $className = self::$className;
 
         if (request()->session()->get("authUserId")) {
-            $user = $className::where([(new $className)->primaryKey, '=', request()->session()->get("authUserId")])->first();
-            unset($user->password);
+            $user = $className::find(request()->session()->get("authUserId"));
+            if (!$user) {
+                return null;
+            }
+            $user->makeHidden('password');
         } else {
             return null;
         }
-        return (object) $user;
+        return $user;
     }
 
     /**
@@ -113,7 +121,8 @@ class FAuth
     public static function logout(): void
     {
         new self();
-        request()->session()->remove('authUserId');
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace Roddy\FirestoreEloquent\Firestore\Relations;
 
 use Roddy\FirestoreEloquent\Facade\FModel;
+use Illuminate\Support\Str;
 
 trait FBelongsTo
 {
@@ -12,28 +13,25 @@ trait FBelongsTo
             throw new \Exception("Related class not provided");
         }
 
-        //check if the related class starts with App\FModels and add the namespace if it doesn't
-        if (strpos($related, 'App\FModels') !== 0) {
-            $related = 'App\FModels\\' . $related;
-        }
-
-        // Check if the related class is a model
-        if (!is_subclass_of($related, FModel::class)) {
-            throw new \Exception("Class {$related} is not a model");
+        if (!str_contains($related, '\\')) {
+            $related = rtrim((string) config('firebase.class_namespace', 'App\\FModels'), '\\') . '\\' . $related;
         }
 
         if (!class_exists($related)) {
             throw new \Exception("Class {$related} not found");
         }
 
-        if ($related === $this::class) {
-            throw new \Exception("Related class cannot be the same as the current class");
+        if (!is_subclass_of($related, FModel::class)) {
+            throw new \Exception("Class {$related} is not a model");
         }
+
+        $relatedModel = new $related();
+        $relatedName = (new \ReflectionClass($related))->getShortName();
 
         return [
             'related' => $related,
-            'foreignKey' => $foreignKey ?? (new $related)->primaryKey,
-            'localKey' => $localKey ?? $this->primaryKey,
+            'foreignKey' => $foreignKey ?? $relatedModel->primaryKey,
+            'localKey' => $localKey ?? Str::snake($relatedName) . '_id',
             'relation' => 'belongsTo'
         ];
     }
